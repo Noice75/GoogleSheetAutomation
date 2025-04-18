@@ -6,18 +6,21 @@
   <title>AI Governance Resource Manager</title>
   <style>
     :root {
-      --primary: #4361ee;
-      --primary-dark: #3a56d4;
-      --primary-light: #e9ecff;
-      --success: #2ecc71;
-      --success-dark: #27ae60;
-      --danger: #e74c3c;
-      --warning: #f39c12;
-      --light: #f8f9fa;
-      --dark: #343a40;
-      --gray: #6c757d;
-      --border: #dee2e6;
-      --background: #f5f8ff;
+      --primary: #10a37f;
+      --primary-dark: #0d8c6d;
+      --primary-light: rgba(16, 163, 127, 0.1);
+      --success: #10a37f;
+      --success-dark: #0d8c6d;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --light: #ffffff;
+      --dark: #1a1a1a;
+      --gray: #666666;
+      --border: rgba(255, 255, 255, 0.1);
+      --background: #f7f7f7;
+      --card-bg: rgba(255, 255, 255, 0.7);
+      --text-primary: #1a1a1a;
+      --text-secondary: #666666;
     }
     
     * {
@@ -27,10 +30,28 @@
     }
     
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       line-height: 1.6;
-      color: #333;
+      color: var(--text-primary);
       background-color: var(--background);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      position: relative;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, 
+        rgba(255, 240, 245, 0.8) 0%,
+        rgba(240, 248, 255, 0.8) 100%
+      );
+      z-index: -1;
     }
     
     .container {
@@ -40,21 +61,26 @@
     }
     
     .card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border);
       padding: 2rem;
       margin-bottom: 2rem;
-      transition: transform 0.3s, box-shadow 0.3s;
+      transition: all 0.3s ease;
+      position: relative;
     }
     
     .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
+      transform: none;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+      background: rgba(255, 255, 255, 0.8);
     }
     
     header {
-      margin-bottom: 2rem;
+      margin-bottom: 3rem;
       display: flex;
       align-items: center;
     }
@@ -62,41 +88,50 @@
     header .logo {
       width: 48px;
       height: 48px;
-      background-color: var(--primary);
+      background-color: transparent;
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-right: 1rem;
-      color: white;
-      font-size: 1.75rem;
+      overflow: hidden;
+    }
+    
+    header .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
     
     h1 {
-      font-size: 1.75rem;
-      color: var(--dark);
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--text-primary);
       margin-bottom: 0.5rem;
+      letter-spacing: -0.5px;
     }
     
     h2 {
       font-size: 1.5rem;
-      color: var(--dark);
+      font-weight: 600;
+      color: var(--text-primary);
       margin-bottom: 1.5rem;
-      border-bottom: 2px solid var(--primary);
-      padding-bottom: 0.5rem;
-      display: inline-block;
+      letter-spacing: -0.5px;
     }
     
     h3 {
       font-size: 1.2rem;
-      color: var(--dark);
+      font-weight: 600;
+      color: var(--text-primary);
       margin-bottom: 1rem;
+      letter-spacing: -0.5px;
     }
     
     .subtitle {
-      color: var(--gray);
-      font-size: 0.95rem;
+      color: var(--text-secondary);
+      font-size: 1rem;
       margin-bottom: 0.75rem;
+      font-weight: 400;
     }
     
     .form-group {
@@ -107,63 +142,104 @@
       display: block;
       margin-bottom: 0.5rem;
       font-weight: 500;
-      color: var(--dark);
+      color: var(--text-primary);
+      font-size: 0.9rem;
     }
     
     .form-control {
       width: 100%;
-      padding: 0.875rem;
+      padding: 0.875rem 1rem;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 12px;
       font-size: 1rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
     }
     
     .form-control:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+      box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.1);
       outline: none;
+      background: rgba(255, 255, 255, 0.9);
     }
     
     .input-group {
+      position: relative;
       display: flex;
-      align-items: center;
+      align-items: stretch;
+      width: 100%;
     }
     
     .input-group .form-control {
-      flex: 1;
       border-top-right-radius: 0;
       border-bottom-right-radius: 0;
+      border-right: none;
+      flex: 1;
+      min-width: 0;
     }
     
     .input-group-append {
+      display: flex;
       margin-left: -1px;
+      flex-shrink: 0;
     }
     
     .input-group-append .btn {
       border-top-left-radius: 0;
       border-bottom-left-radius: 0;
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 12px;
       height: 100%;
+      padding: 0 1.25rem;
+      min-width: 100px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      background: var(--primary);
+      color: white;
+      border: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .input-group .form-control:focus {
+      position: relative;
+      z-index: 0;
+    }
+    
+    .input-group .form-control:focus + .input-group-append .btn {
+      border-color: var(--primary);
+      color: white;
     }
     
     textarea.form-control {
-      min-height: 100px;
+      min-height: 120px;
       resize: vertical;
+      line-height: 1.6;
     }
     
     .btn {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       font-weight: 500;
       text-align: center;
       vertical-align: middle;
       cursor: pointer;
       padding: 0.875rem 1.5rem;
-      font-size: 1rem;
+      font-size: 0.95rem;
       line-height: 1.5;
-      border-radius: 8px;
-      transition: all 0.2s ease-in-out;
+      border-radius: 12px;
+      transition: all 0.2s ease;
       border: none;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
     
     .btn-primary {
@@ -173,7 +249,8 @@
     
     .btn-primary:hover:not(:disabled) {
       background-color: var(--primary-dark);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 4px 12px rgba(16, 163, 127, 0.3);
+      transform: translateY(-1px);
     }
     
     .btn-success {
@@ -183,18 +260,22 @@
     
     .btn-success:hover:not(:disabled) {
       background-color: var(--success-dark);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 4px 12px rgba(16, 163, 127, 0.3);
+      transform: translateY(-1px);
     }
     
     .btn-secondary {
-      background-color: var(--light);
-      color: var(--dark);
+      background-color: rgba(255, 255, 255, 0.8);
+      color: var(--text-primary);
       border: 1px solid var(--border);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
     }
     
     .btn-secondary:hover:not(:disabled) {
-      background-color: #e9ecef;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      background-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
     }
     
     .btn-sm {
@@ -216,53 +297,117 @@
     
     .status {
       padding: 1rem;
-      border-radius: 8px;
-      margin-top: 1.5rem;
+      border-radius: 12px;
+      margin-top: 0.75rem;
       display: flex;
       align-items: center;
+      gap: 0.75rem;
+      font-weight: 500;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid transparent;
+      animation: statusFadeIn 0.3s ease;
+    }
+
+    @keyframes statusFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     
     .status:before {
       content: '';
-      width: 20px;
-      height: 20px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
-      margin-right: 0.75rem;
       flex-shrink: 0;
     }
     
     .status-success {
-      background-color: rgba(46, 204, 113, 0.1);
-      color: var(--success-dark);
+      background: rgba(16, 163, 127, 0.15);
+      color: #10a37f;
+      border-color: rgba(16, 163, 127, 0.3);
     }
     
     .status-success:before {
-      background-color: var(--success);
+      background-color: #10a37f;
+      box-shadow: 0 0 8px rgba(16, 163, 127, 0.5);
     }
     
     .status-error {
-      background-color: rgba(231, 76, 60, 0.1);
-      color: var(--danger);
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.3);
     }
     
     .status-error:before {
-      background-color: var(--danger);
+      background-color: #ef4444;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
     }
     
     .status-loading {
-      background-color: rgba(241, 242, 243, 0.7);
-      color: var(--gray);
+      background: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+      border-color: rgba(59, 130, 246, 0.3);
     }
     
     .status-loading:before {
-      background-color: var(--gray);
+      background-color: #3b82f6;
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
       animation: pulse 1.5s infinite;
     }
     
+    [data-theme="dark"] .status-success {
+      background: rgba(16, 163, 127, 0.2);
+      color: #34d399;
+      border-color: rgba(16, 163, 127, 0.4);
+    }
+    
+    [data-theme="dark"] .status-success:before {
+      background-color: #34d399;
+      box-shadow: 0 0 12px rgba(52, 211, 153, 0.6);
+    }
+    
+    [data-theme="dark"] .status-error {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+    
+    [data-theme="dark"] .status-error:before {
+      background-color: #f87171;
+      box-shadow: 0 0 12px rgba(248, 113, 113, 0.6);
+    }
+    
+    [data-theme="dark"] .status-loading {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+    
+    [data-theme="dark"] .status-loading:before {
+      background-color: #60a5fa;
+      box-shadow: 0 0 12px rgba(96, 165, 250, 0.6);
+    }
+    
     @keyframes pulse {
-      0% { opacity: 0.5; }
-      50% { opacity: 1; }
-      100% { opacity: 0.5; }
+      0% { 
+        transform: scale(0.8);
+        opacity: 0.5;
+      }
+      50% { 
+        transform: scale(1.2);
+        opacity: 1;
+      }
+      100% { 
+        transform: scale(0.8);
+        opacity: 0.5;
+      }
     }
     
     .hidden {
@@ -284,24 +429,34 @@
       display: flex;
       margin-bottom: 2rem;
       border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border-radius: 12px;
+      padding: 0.5rem;
+      justify-content: space-evenly;
+      width: 100%;
     }
     
     .tab {
-      padding: 1rem 1.5rem;
+      padding: 0.75rem 1.5rem;
       cursor: pointer;
-      border-bottom: 3px solid transparent;
+      border-radius: 8px;
       font-weight: 500;
       transition: all 0.2s;
+      color: var(--text-secondary);
+      min-width: 160px;
+      text-align: center;
     }
     
     .tab.active {
-      border-bottom-color: var(--primary);
-      color: var(--primary);
+      background-color: var(--primary);
+      color: white;
     }
     
     .tab:hover:not(.active) {
-      border-bottom-color: var(--border);
       background-color: var(--primary-light);
+      color: var(--primary);
     }
     
     .tab-content {
@@ -502,21 +657,614 @@
         justify-content: flex-end;
       }
     }
+
+    .worksheet-view {
+      margin-top: 2rem;
+    }
+
+    .worksheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--primary-light);
+    }
+
+    .worksheet-title {
+      font-size: 1.5rem;
+      color: var(--primary);
+      margin: 0;
+    }
+
+    .worksheet-controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .search-box {
+      position: relative;
+      width: 300px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 0.5rem 2rem 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .search-box::after {
+      content: "🔍";
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+    }
+
+    .sort-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .sort-btn {
+      padding: 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.9rem;
+      color: var(--gray);
+    }
+
+    .sort-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .sort-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .worksheet-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .worksheet-table th {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 500;
+      padding: 1rem;
+      text-align: left;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .worksheet-table th:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .worksheet-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .worksheet-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .worksheet-table tr:hover {
+      background: var(--primary-light);
+    }
+
+    .worksheet-table .link-cell {
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .worksheet-table .link-cell a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .worksheet-table .link-cell a:hover {
+      text-decoration: underline;
+    }
+
+    .worksheet-table .summary-cell {
+      max-width: 400px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .worksheet-table .date-cell {
+      width: 120px;
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 2rem;
+      gap: 0.5rem;
+    }
+
+    .pagination button {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pagination button:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .pagination button.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--gray);
+    }
+
+    .empty-state p {
+      margin-top: 1rem;
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #1a1a1a;
+        --card-bg: rgba(30, 30, 30, 0.7);
+        --text-primary: #ffffff;
+        --text-secondary: #a0a0a0;
+        --border: rgba(255, 255, 255, 0.1);
+      }
+      
+      .form-control {
+        background: rgba(30, 30, 30, 0.8);
+        color: var(--text-primary);
+      }
+      
+      .form-control:focus {
+        background: rgba(30, 30, 30, 0.9);
+      }
+      
+      .btn-secondary {
+        background-color: rgba(30, 30, 30, 0.8);
+        color: var(--text-primary);
+      }
+      
+      .btn-secondary:hover:not(:disabled) {
+        background-color: rgba(30, 30, 30, 0.9);
+      }
+      
+      .status {
+        background: rgba(30, 30, 30, 0.8);
+      }
+      
+      .tab-container {
+        background: rgba(30, 30, 30, 0.8);
+      }
+    }
+
+    [data-theme="dark"] {
+      --background: #1a1a1a;
+      --card-bg: rgba(30, 30, 30, 0.7);
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --border: rgba(255, 255, 255, 0.1);
+    }
+    
+    [data-theme="dark"] .form-control {
+      background: rgba(30, 30, 30, 0.8);
+      color: var(--text-primary);
+    }
+    
+    [data-theme="dark"] .form-control:focus {
+      background: rgba(30, 30, 30, 0.9);
+    }
+    
+    [data-theme="dark"] .btn-secondary {
+      background-color: rgba(30, 30, 30, 0.8);
+      color: var(--text-primary);
+    }
+    
+    [data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+      background-color: rgba(30, 30, 30, 0.9);
+    }
+    
+    [data-theme="dark"] .status {
+      background: rgba(30, 30, 30, 0.8);
+    }
+    
+    [data-theme="dark"] .tab-container {
+      background: rgba(30, 30, 30, 0.8);
+    }
+    
+    [data-theme="dark"] .theme-switch {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    [data-theme="dark"] .theme-switch:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    [data-theme="dark"] .card {
+      background: rgba(30, 30, 30, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    [data-theme="dark"] .card:hover {
+      background: rgba(30, 30, 30, 0.8);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    [data-theme="dark"] body::before {
+      background: none;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .navbar-title {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .navbar-title h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .navbar-title .subtitle {
+      font-size: 0.9rem;
+      margin-bottom: 0;
+    }
+    
+    .main-content {
+      margin-top: 5rem;
+    }
+
+    .theme-switch-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .theme-label {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      transition: opacity 0.3s ease;
+      letter-spacing: 0.5px;
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .theme-label:hover {
+      color: var(--primary);
+    }
+
+    .theme-label.light {
+      display: none;
+    }
+
+    .theme-label.dark {
+      display: block;
+    }
+
+    [data-theme="dark"] .theme-label.light {
+      display: block;
+    }
+
+    [data-theme="dark"] .theme-label.dark {
+      display: none;
+    }
+
+    .theme-switch {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      color: var(--text-primary);
+    }
+    
+    .theme-switch:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+    
+    .theme-switch:active {
+      transform: scale(0.95);
+    }
+    
+    .theme-switch svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    
+    .theme-switch .light-icon {
+      display: none;
+    }
+    
+    .theme-switch .dark-icon {
+      display: block;
+    }
+    
+    [data-theme="dark"] .theme-switch .light-icon {
+      display: block;
+    }
+    
+    [data-theme="dark"] .theme-switch .dark-icon {
+      display: none;
+    }
+    
+    /* Add smooth theme transition */
+    body {
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    .card, .form-control, .btn, .status, .tab-container {
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    /* Update light theme colors */
+    [data-theme="light"] {
+      --background: #f8f9fa;
+      --card-bg: rgba(255, 255, 255, 0.7);
+      --text-primary: #1a1a1a;
+      --text-secondary: #666666;
+      --border: rgba(0, 0, 0, 0.1);
+      --primary: #10a37f;
+      --primary-dark: #0d8c6d;
+      --primary-light: rgba(16, 163, 127, 0.1);
+    }
+    
+    [data-theme="light"] .navbar {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    [data-theme="light"] .card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+    }
+    
+    [data-theme="light"] .card:hover {
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    }
+    
+    [data-theme="light"] .form-control {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      color: var(--text-primary);
+    }
+    
+    [data-theme="light"] .form-control:focus {
+      background: rgba(255, 255, 255, 0.8);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.1);
+    }
+    
+    [data-theme="light"] .tab-container {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    [data-theme="light"] .status {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+    
+    [data-theme="light"] .theme-switch {
+      background: rgba(0, 0, 0, 0.05);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+    
+    [data-theme="light"] .theme-switch:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+    
+    [data-theme="light"] .input-group-append .btn {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      color: var(--text-primary);
+    }
+    
+    [data-theme="light"] .input-group-append .btn:hover {
+      background: rgba(255, 255, 255, 0.8);
+      border-color: rgba(0, 0, 0, 0.2);
+      color: var(--primary);
+    }
+    
+    [data-theme="light"] select.form-control {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+    
+    [data-theme="light"] select.form-control:focus {
+      background: rgba(255, 255, 255, 0.8);
+    }
+    
+    [data-theme="light"] .status-success {
+      background: rgba(16, 163, 127, 0.1);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+    
+    [data-theme="light"] .status-error {
+      background: rgba(239, 68, 68, 0.1);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+    
+    [data-theme="light"] .status-loading {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+
+    .mt-4 {
+      margin-top: 2rem;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+    
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      margin: 10vh auto;
+      border: 1px solid var(--border);
+    }
+    
+    .modal-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-body {
+      padding: 1.5rem;
+    }
+    
+    .modal-footer {
+      padding: 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+    
+    .close-button {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    
+    .close-button:hover {
+      color: var(--primary);
+    }
+    
+    .text-muted {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="logo">📊</div>
-      <div>
-        <h1>AI Governance Resource Manager</h1>
-        <p class="subtitle">Collect, organize, and manage AI governance resources efficiently</p>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div class="logo">
+        <img src="../static/icon.png" alt="AI Logo" width="50" height="50">
       </div>
-    </header>
-    
+      <div class="navbar-title">
+        <h1>AI Governance Resource Manager</h1>
+      </div>
+    </div>
+    <div class="theme-switch-container">
+      <button class="theme-switch" id="themeSwitch" title="Toggle theme" aria-label="Toggle theme">
+        <svg class="light-icon" viewBox="0 0 24 24" width="24" height="24">
+          <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06z"/>
+        </svg>
+        <svg class="dark-icon" viewBox="0 0 24 24" width="24" height="24">
+          <path d="M12.1,22c-0.3,0-0.6,0-0.9,0c-5.5-0.5-9.5-5.4-9-10.9c0.4-4.8,4.2-8.6,9-9c0.4,0,0.8,0.2,1,0.5c0.2,0.3,0.2,0.8-0.1,1.1c-2,2.7-1.4,6.4,1.3,8.4c2.1,1.6,5,1.6,7.1,0c0.3-0.2,0.7-0.3,1.1-0.1c0.3,0.2,0.5,0.6,0.5,1c-0.2,2.7-1.5,5.1-3.6,6.8C16.6,21.2,14.4,22,12.1,22zM9.3,4.4c-2.9,1-5,3.6-5.2,6.8c-0.4,4.4,2.8,8.3,7.2,8.7c2.1,0.2,4.2-0.4,5.8-1.8c1.1-0.9,1.9-2.1,2.4-3.4c-2.5,0.9-5.3,0.5-7.5-1.1C9.2,11.4,8.1,7.7,9.3,4.4z"/>
+        </svg>
+      </button>
+      <span class="theme-label dark" onclick="toggleTheme()">Dark</span>
+      <span class="theme-label light" onclick="toggleTheme()">Light</span>
+    </div>
+  </nav>
+  
+  <div class="container main-content">
     <div class="tab-container">
       <div class="tab active" data-tab="add-resource">Add Resource</div>
-      <div class="tab" data-tab="view-worksheets">View Worksheets</div>
       <div class="tab" data-tab="manage-worksheets">Manage Worksheets</div>
     </div>
     
@@ -529,33 +1277,34 @@
         <form id="linkForm">
           <div class="form-group">
             <label for="link">Resource URL</label>
-            <input type="url" id="link" class="form-control" placeholder="https://example.com/resource" required>
+            <input type="url" id="link" class="form-control" placeholder="https://example.com/resource" required autocomplete="off">
+            <div id="linkStatus" class="status hidden"></div>
           </div>
           
           <div class="form-group">
             <label for="title">Title</label>
-            <input type="text" id="title" class="form-control" placeholder="Enter title">
+            <input type="text" id="title" class="form-control" placeholder="Enter title" autocomplete="off">
           </div>
           
           <div class="form-group">
             <label for="summary">Summary</label>
-            <textarea id="summary" class="form-control" placeholder="Enter summary"></textarea>
+            <textarea id="summary" class="form-control" placeholder="Enter summary" autocomplete="off"></textarea>
           </div>
           
           <div class="form-group">
             <label for="date">Publication Date</label>
-            <input type="date" id="date" class="form-control">
+            <input type="date" id="date" class="form-control" autocomplete="off">
           </div>
           
           <div class="form-group">
             <label for="category">Worksheet</label>
             <div class="input-group">
-              <select id="category" class="form-control">
+              <select id="category" class="form-control" autocomplete="off">
                 <option value="">Loading worksheets...</option>
               </select>
               <div class="input-group-append">
-                <button type="button" id="refreshWorksheetsBtn" class="btn btn-primary btn-sm" title="Refresh worksheets">
-                  ↻
+                <button type="button" id="refreshWorksheetsBtn" class="btn btn-sm" title="Refresh worksheets">
+                  <span>↻</span>
                 </button>
               </div>
             </div>
@@ -563,20 +1312,6 @@
           <button type="submit" id="submitBtn" class="btn btn-primary" disabled>Add Resource</button>
         </form>
         <div id="status" class="hidden"></div>
-      </div>
-    </div>
-    
-    <div id="view-worksheets" class="tab-content">
-      <div class="card">
-        <div class="card-header">
-          <h2>Worksheets</h2>
-          <button id="refreshWorksheetListBtn" class="btn btn-secondary btn-sm">
-            <span class="btn-icon">↻ Refresh</span>
-          </button>
-        </div>
-        <div class="worksheet-list" id="worksheetList">
-          <div class="status status-loading">Loading worksheets...</div>
-        </div>
       </div>
     </div>
     
@@ -592,41 +1327,40 @@
         <button type="button" id="createWorksheetBtn" class="btn btn-success">Create Worksheet</button>
         <div id="worksheetStatus" class="hidden"></div>
       </div>
+
+      <div class="card mt-4">
+        <div class="card-header">
+          <h2>Manage Sheet ID</h2>
+        </div>
+        <div class="form-group">
+          <label for="sheetId">Google Sheet ID</label>
+          <div class="input-group">
+            <input type="text" id="sheetId" class="form-control" placeholder="Enter Google Sheet ID" autocomplete="off">
+            <div class="input-group-append">
+              <button type="button" id="updateSheetIdBtn" class="btn btn-primary">Update ID</button>
+            </div>
+          </div>
+          <small class="text-muted mt-2" style="display: block;">Current Sheet ID will be loaded automatically.</small>
+        </div>
+        <div id="sheetIdStatus" class="hidden"></div>
+      </div>
     </div>
-  </div>
-  
-  <!-- Modal for viewing worksheet data -->
-  <div id="worksheetModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title" id="modalTitle">Worksheet Title</h3>
-        <button class="close-button" id="closeModal">&times;</button>
-      </div>
-      <div class="worksheet-controls">
-        <div class="worksheet-info">
-          <p id="worksheetRowCount">Loading...</p>
+
+    <div class="modal" id="confirmModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Confirm Sheet ID Change</h3>
+          <button type="button" class="close-button" onclick="closeConfirmModal()">&times;</button>
         </div>
-        <div>
-          <input type="text" id="searchInput" class="form-control" placeholder="Search resources...">
+        <div class="modal-body">
+          <p>Are you sure you want to change the Sheet ID? This will affect all operations.</p>
+          <p>New Sheet ID: <strong id="newSheetId"></strong></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="confirmSheetIdChange()">Confirm Change</button>
         </div>
       </div>
-      <div class="table-container">
-        <table id="worksheetTable">
-          <thead>
-            <tr>
-              <th>Link</th>
-              <th>Summary</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody id="worksheetData">
-            <tr>
-              <td colspan="3">Loading data...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="pagination" id="pagination"></div>
     </div>
   </div>
 
@@ -669,8 +1403,8 @@
         const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}`;
         window.open(sheetUrl, "_blank");
       } else {
-        // Show an error if we couldn't get the sheet ID
-        showStatus("status", "Could not retrieve Google Sheet link", "error");
+        // Show an error if there's no sheet ID
+        showStatus("status", "No Google Sheet ID configured. Please set one in the Manage Worksheets tab.", "error");
       }
     }
 
@@ -701,6 +1435,12 @@
         const response = await fetch("http://localhost:5000/get-worksheets");
         const data = await response.json();
         
+        if (data.status === "error") {
+          showStatus("status", data.error, "error");
+          submitBtn.disabled = true;
+          return;
+        }
+        
         if (data.worksheets && data.worksheets.length > 0) {
           // Clear the loading option
           categorySelect.innerHTML = "";
@@ -721,138 +1461,50 @@
           
           submitBtn.disabled = false;
           document.getElementById("status").className = "hidden";
-          
-          // Update the worksheet list if we're on that tab
-          populateWorksheetList(data.worksheets);
         } else {
-          showStatus("status", "No worksheets found. Create one below.", "error");
+          showStatus("status", "No worksheets found. Please set a valid Sheet ID and create a worksheet.", "error");
+          submitBtn.disabled = true;
         }
       } catch (error) {
         showStatus("status", `Error loading worksheets: ${error.message}`, "error");
+        submitBtn.disabled = true;
       }
     }
-    
-    // Function to populate the worksheet list
-    function populateWorksheetList(worksheets) {
-      const worksheetList = document.getElementById("worksheetList");
-      
-      if (!worksheets || worksheets.length === 0) {
-        worksheetList.innerHTML = '<div class="status status-error">No worksheets found</div>';
-        return;
-      }
-      
-      worksheetList.innerHTML = '';
-      
-      worksheets.forEach(name => {
-        const item = document.createElement("div");
-        item.className = "worksheet-item";
-        
-        item.innerHTML = `
-          <div class="worksheet-name">${name}</div>
-          <div class="action-buttons">
-            <button class="btn btn-secondary btn-sm view-worksheet" data-name="${name}">View</button>
-          </div>
-        `;
-        
-        worksheetList.appendChild(item);
-      });
-      
-      // Add event listeners to view buttons
-      document.querySelectorAll('.view-worksheet').forEach(button => {
-        button.addEventListener('click', function() {
-          const worksheetName = this.getAttribute('data-name');
-          openWorksheetModal(worksheetName);
-        });
-      });
-    }
-    
-    // Function to open worksheet modal and load data
-    async function openWorksheetModal(worksheetName) {
-      const modal = document.getElementById("worksheetModal");
-      const modalTitle = document.getElementById("modalTitle");
-      const worksheetData = document.getElementById("worksheetData");
-      const worksheetRowCount = document.getElementById("worksheetRowCount");
-      
-      // Set the modal title
-      modalTitle.textContent = worksheetName;
-      
-      // Show the modal
-      modal.style.display = "flex";
-      
-      // Set loading state
-      worksheetData.innerHTML = '<tr><td colspan="3">Loading data...</td></tr>';
-      worksheetRowCount.textContent = "Loading...";
-      
+
+    // Function to scrape article content
+    async function scrapeArticle(url) {
       try {
-        // Fetch worksheet data
-        const response = await fetch(`http://localhost:5000/worksheet-data?name=${encodeURIComponent(worksheetName)}`);
+        showStatus("linkStatus", "Scraping article...", "loading");
+        
+        const response = await fetch("http://localhost:5000/scrape-article", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ url: url })
+        });
+        
         const data = await response.json();
         
         if (data.status === "success") {
-          worksheetRowCount.textContent = `Total entries: ${data.rows.length}`;
-          
-          if (data.rows.length === 0) {
-            worksheetData.innerHTML = '<tr><td colspan="3">No data in this worksheet</td></tr>';
-            return;
-          }
-          
-          // Clear previous data
-          worksheetData.innerHTML = '';
-          
-          // Populate table with data
-          data.rows.forEach(row => {
-            const tr = document.createElement("tr");
-            
-            // Link cell with clickable URL
-            const linkCell = document.createElement("td");
-            const link = document.createElement("a");
-            link.href = row[0];
-            link.textContent = row[0].length > 40 ? row[0].substring(0, 40) + "..." : row[0];
-            link.target = "_blank";
-            linkCell.appendChild(link);
-            tr.appendChild(linkCell);
-            
-            // Summary cell
-            const summaryCell = document.createElement("td");
-            summaryCell.textContent = row[1];
-            tr.appendChild(summaryCell);
-            
-            // Date cell
-            const dateCell = document.createElement("td");
-            dateCell.textContent = row[2];
-            tr.appendChild(dateCell);
-            
-            worksheetData.appendChild(tr);
-          });
+          // Auto-fill both title and summary fields
+          document.getElementById("title").value = data.title;
+          document.getElementById("summary").value = data.summary;
+          showStatus("linkStatus", "Article scraped successfully!", "success");
         } else {
-          worksheetData.innerHTML = `<tr><td colspan="3">Error: ${data.error}</td></tr>`;
+          showStatus("linkStatus", `Error: ${data.error}`, "error");
         }
       } catch (error) {
-        worksheetData.innerHTML = `<tr><td colspan="3">Error: ${error.message}</td></tr>`;
+        showStatus("linkStatus", `Error: ${error.message}`, "error");
       }
     }
-    
-    // Close modal when clicking the close button or outside the modal
-    document.getElementById("closeModal").addEventListener("click", function() {
-      document.getElementById("worksheetModal").style.display = "none";
-    });
-    
-    window.addEventListener("click", function(event) {
-      const modal = document.getElementById("worksheetModal");
-      if (event.target === modal) {
-        modal.style.display = "none";
+
+    // Add event listener for URL input
+    document.getElementById("link").addEventListener("blur", function() {
+      const url = this.value.trim();
+      if (url && url.startsWith('http')) {
+        scrapeArticle(url);
       }
-    });
-    
-    // Search function for worksheet data
-    document.getElementById("searchInput").addEventListener("input", function() {
-      const searchValue = this.value.toLowerCase();
-      const rows = document.querySelectorAll("#worksheetData tr");
-      
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchValue) ? "" : "none";
-      });
     });
 
     // Fetch worksheets when page loads
@@ -867,7 +1519,6 @@
     
     // Refresh worksheets button
     document.getElementById("refreshWorksheetsBtn").addEventListener("click", fetchWorksheets);
-    document.getElementById("refreshWorksheetListBtn").addEventListener("click", fetchWorksheets);
     
     // Create new worksheet
     document.getElementById("createWorksheetBtn").addEventListener("click", async () => {
@@ -903,42 +1554,6 @@
         }
       } catch (error) {
         showStatus("worksheetStatus", `Error: ${error.message}`, "error");
-      }
-    });
-
-    // Function to scrape article content
-    async function scrapeArticle(url) {
-      try {
-        showStatus("status", "Scraping article...", "loading");
-        
-        const response = await fetch("http://localhost:5000/scrape-article", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ url: url })
-        });
-        
-        const data = await response.json();
-        
-        if (data.status === "success") {
-          // Auto-fill both title and summary fields
-          document.getElementById("title").value = data.title;
-          document.getElementById("summary").value = data.summary;
-          showStatus("status", "Article scraped successfully!", "success");
-        } else {
-          showStatus("status", `Error: ${data.error}`, "error");
-        }
-      } catch (error) {
-        showStatus("status", `Error: ${error.message}`, "error");
-      }
-    }
-
-    // Add event listener for URL input
-    document.getElementById("link").addEventListener("blur", function() {
-      const url = this.value.trim();
-      if (url && url.startsWith('http')) {
-        scrapeArticle(url);
       }
     });
 
@@ -997,6 +1612,110 @@
         showStatus("status", `Error: ${error.message}`, "error");
       }
     });
+
+    // Theme switching functionality
+    const themeSwitch = document.getElementById('themeSwitch');
+    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    // Check for saved theme preference or use system preference
+    const currentTheme = localStorage.getItem('theme') || 
+                        (prefersDarkScheme.matches ? 'dark' : 'light');
+    
+    // Apply the theme
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    
+    // Toggle theme function
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      // Add transition class
+      document.body.classList.add('theme-transition');
+      
+      // Update theme
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      
+      // Remove transition class after animation
+      setTimeout(() => {
+        document.body.classList.remove('theme-transition');
+      }, 300);
+    }
+    
+    // Toggle theme with button
+    themeSwitch.addEventListener('click', toggleTheme);
+    
+    // Listen for system theme changes
+    prefersDarkScheme.addEventListener('change', (e) => {
+      if (!localStorage.getItem('theme')) {
+        const newTheme = e.matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+      }
+    });
+
+    // Load current Sheet ID
+    async function loadCurrentSheetId() {
+      try {
+        const response = await fetch('/get-sheet-id');
+        const data = await response.json();
+        if (data.status === 'success') {
+          const sheetId = data.sheet_id;
+          document.getElementById('sheetId').value = sheetId;
+          if (!sheetId) {
+            showStatus('sheetIdStatus', 'No Sheet ID configured. Please enter a valid Google Sheet ID.', 'error');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading sheet ID:', error);
+        showStatus('sheetIdStatus', 'Error loading Sheet ID. Please try again.', 'error');
+      }
+    }
+
+    // Initialize sheet ID field
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCurrentSheetId();
+    });
+
+    // Update Sheet ID
+    document.getElementById('updateSheetIdBtn').addEventListener('click', () => {
+      const newId = document.getElementById('sheetId').value.trim();
+      if (!newId) {
+        showStatus('sheetIdStatus', 'Please enter a Sheet ID', 'error');
+        return;
+      }
+      document.getElementById('newSheetId').textContent = newId;
+      document.getElementById('confirmModal').style.display = 'block';
+    });
+
+    function closeConfirmModal() {
+      document.getElementById('confirmModal').style.display = 'none';
+    }
+
+    async function confirmSheetIdChange() {
+      const newId = document.getElementById('sheetId').value.trim();
+      try {
+        showStatus('sheetIdStatus', 'Updating Sheet ID...', 'loading');
+        const response = await fetch('/update-sheet-id', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ sheet_id: newId })
+        });
+        
+        const result = await response.json();
+        if (result.status === 'success') {
+          showStatus('sheetIdStatus', 'Sheet ID updated successfully!', 'success');
+          closeConfirmModal();
+          // Refresh worksheets list
+          fetchWorksheets();
+        } else {
+          showStatus('sheetIdStatus', `Error: ${result.error}`, 'error');
+        }
+      } catch (error) {
+        showStatus('sheetIdStatus', `Error: ${error.message}`, 'error');
+      }
+    }
   </script>
 </body>
 </html>

@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 import time
 import random
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
@@ -22,16 +23,47 @@ CORS(app)  # Enable CORS for all domains
 
 # Google Sheets API setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-try:
-    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-    client = gspread.authorize(creds)
+SERVICE_ACCOUNT_FILE = 'credentials.json'
 
-    # Replace with your actual Google Sheet ID
-    SHEET_ID = "1_bxDix9ytq7IYMxUA6PI7obyKJCHrnpN5yLXuJb1AfY"
-    sheet = client.open_by_key(SHEET_ID)
-    logger.info(f"Successfully connected to Google Sheet: {SHEET_ID}")
-except Exception as e:
-    logger.error(f"Error initializing Google Sheets API: {str(e)}")
+def load_config():
+    """Load the sheet ID from config.json, create if it doesn't exist"""
+    if not os.path.exists('config.json'):
+        # Create config file with empty sheet ID
+        with open('config.json', 'w') as f:
+            json.dump({"sheet_id": ""}, f)
+        return ""
+    
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+        return config.get('sheet_id', "")
+
+def save_config(sheet_id):
+    """Save the sheet ID to config.json"""
+    with open('config.json', 'w') as f:
+        json.dump({"sheet_id": sheet_id}, f)
+
+def update_sheet_connection(new_sheet_id):
+    """Update the global sheet variable with new sheet ID"""
+    global sheet
+    if new_sheet_id:
+        creds = ServiceAccountCredentials.from_json_keyfile_name(SERVICE_ACCOUNT_FILE, scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key(new_sheet_id)
+    else:
+        sheet = None
+
+# Initialize sheet variable
+SHEET_ID = load_config()
+if SHEET_ID:
+    try:
+        creds = ServiceAccountCredentials.from_json_keyfile_name(SERVICE_ACCOUNT_FILE, scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key(SHEET_ID)
+    except Exception as e:
+        logger.error(f"Error connecting to sheet: {str(e)}")
+        sheet = None
+else:
+    sheet = None
 
 # Helper function to reconnect if token expires
 def reconnect_if_needed():
@@ -52,6 +84,37 @@ def reconnect_if_needed():
         except Exception as reconnect_error:
             logger.error(f"Failed to reconnect: {str(reconnect_error)}")
             return False
+
+# Load Sheet ID from config
+def load_config():
+    try:
+        with open('config.json', 'r') as f:
+            config = json.load(f)
+            return config.get('sheet_id')
+    except Exception as e:
+        logger.error(f"Error loading config: {str(e)}")
+        return None
+
+def save_config(sheet_id):
+    try:
+        config = {'sheet_id': sheet_id}
+        with open('config.json', 'w') as f:
+            json.dump(config, f, indent=4)
+        return True
+    except Exception as e:
+        logger.error(f"Error saving config: {str(e)}")
+        return False
+
+# Update the global sheet variable
+def update_sheet_connection(new_sheet_id):
+    global sheet, SHEET_ID
+    try:
+        SHEET_ID = new_sheet_id
+        sheet = client.open_by_key(SHEET_ID)
+        return True
+    except Exception as e:
+        logger.error(f"Error connecting to new sheet: {str(e)}")
+        return False
 
 @app.route('/')
 def index():
@@ -340,6 +403,28 @@ def scrape_article():
     except Exception as e:
         logger.error(f"Error scraping article: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/update-sheet-id', methods=['POST'])
+def update_sheet_id():
+    try:
+        data = request.json
+        new_sheet_id = data.get('sheet_id')
+        
+        if not new_sheet_id:
+            return jsonify({"status": "error", "error": "Sheet ID is required"}), 400
+            
+        # Try to connect to the new sheet
+        if not update_sheet_connection(new_sheet_id):
+            return jsonify({"status": "error", "error": "Could not connect to the specified sheet"}), 400
+            
+        # Save to config file
+        if not save_config(new_sheet_id):
+            return jsonify({"status": "error", "error": "Could not save configuration"}), 500
+            
+        return jsonify({"status": "success", "message": "Sheet ID updated successfully"}), 200
+    except Exception as e:
+        logger.error(f"Error updating sheet ID: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
