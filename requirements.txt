@@ -1,0 +1,8 @@
+flask
+flask-cors
+gspread
+oauth2client
+beautifulsoup4
+requests
+newspaper3k
+fake-useragent 

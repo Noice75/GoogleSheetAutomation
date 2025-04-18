@@ -953,6 +953,41 @@
         showStatus("status", `Error: ${error.message}`, "error");
       }
     });
+
+    // Function to scrape article content
+    async function scrapeArticle(url) {
+      try {
+        showStatus("status", "Scraping article...", "loading");
+        
+        const response = await fetch("http://localhost:5000/scrape-article", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ url: url })
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === "success") {
+          // Auto-fill the summary field
+          document.getElementById("summary").value = data.summary;
+          showStatus("status", "Article scraped successfully!", "success");
+        } else {
+          showStatus("status", `Error: ${data.error}`, "error");
+        }
+      } catch (error) {
+        showStatus("status", `Error: ${error.message}`, "error");
+      }
+    }
+
+    // Add event listener for URL input
+    document.getElementById("link").addEventListener("blur", function() {
+      const url = this.value.trim();
+      if (url && url.startsWith('http')) {
+        scrapeArticle(url);
+      }
+    });
   </script>
 </body>
 </html>

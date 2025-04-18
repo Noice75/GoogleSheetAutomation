@@ -5,6 +5,12 @@ from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import os
 import logging
+from newspaper import Article
+import requests
+from bs4 import BeautifulSoup
+from fake_useragent import UserAgent
+import time
+import random
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
@@ -265,6 +271,74 @@ def health_check():
             return jsonify({"status": "unhealthy", "message": "Cannot connect to Google Sheets"}), 500
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/scrape-article', methods=['POST'])
+def scrape_article():
+    try:
+        data = request.json
+        url = data.get('url')
+        
+        if not url:
+            return jsonify({"error": "URL is required"}), 400
+            
+        # First try with simple newspaper approach
+        try:
+            article = Article(url)
+            article.download()
+            article.parse()
+            
+            if article.text:
+                formatted_summary = f"Title: {article.title}\n\nSummary: {article.text[:500]}..."
+                return jsonify({
+                    "status": "success",
+                    "title": article.title,
+                    "summary": formatted_summary
+                }), 200
+        except Exception as e:
+            logger.warning(f"Initial scraping attempt failed: {str(e)}")
+            # Continue to fallback method if first attempt fails
+        
+        # If first attempt fails, try with user agent and fallback methods
+        try:
+            ua = UserAgent()
+            headers = {
+                'User-Agent': ua.random,
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+            }
+            
+            # Try direct requests with BeautifulSoup
+            response = requests.get(url, headers=headers)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Try to get title
+            title = soup.title.string if soup.title else "No title found"
+            
+            # Try to get main content
+            main_content = soup.find('main') or soup.find('article') or soup.find('div', class_='content')
+            if main_content:
+                text = main_content.get_text(strip=True)
+            else:
+                # Fallback to body text
+                text = soup.body.get_text(strip=True) if soup.body else "No content found"
+            
+            formatted_summary = f"Title: {title}\n\nSummary: {text[:500]}..."
+            
+            return jsonify({
+                "status": "success",
+                "title": title,
+                "summary": formatted_summary
+            }), 200
+            
+        except Exception as fallback_error:
+            logger.error(f"Fallback scraping failed: {str(fallback_error)}")
+            return jsonify({"error": "Could not scrape the article. The website might be blocking automated access."}), 500
+                
+    except Exception as e:
+        logger.error(f"Error scraping article: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
