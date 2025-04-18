@@ -533,8 +533,13 @@
           </div>
           
           <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" class="form-control" placeholder="Enter title">
+          </div>
+          
+          <div class="form-group">
             <label for="summary">Summary</label>
-            <textarea id="summary" class="form-control" placeholder="Brief description of this resource..."></textarea>
+            <textarea id="summary" class="form-control" placeholder="Enter summary"></textarea>
           </div>
           
           <div class="form-group">
@@ -901,11 +906,49 @@
       }
     });
 
+    // Function to scrape article content
+    async function scrapeArticle(url) {
+      try {
+        showStatus("status", "Scraping article...", "loading");
+        
+        const response = await fetch("http://localhost:5000/scrape-article", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ url: url })
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === "success") {
+          // Auto-fill both title and summary fields
+          document.getElementById("title").value = data.title;
+          document.getElementById("summary").value = data.summary;
+          showStatus("status", "Article scraped successfully!", "success");
+        } else {
+          showStatus("status", `Error: ${data.error}`, "error");
+        }
+      } catch (error) {
+        showStatus("status", `Error: ${error.message}`, "error");
+      }
+    }
+
+    // Add event listener for URL input
+    document.getElementById("link").addEventListener("blur", function() {
+      const url = this.value.trim();
+      if (url && url.startsWith('http')) {
+        scrapeArticle(url);
+      }
+    });
+
     // Submit link form
     document.getElementById("linkForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       
       const linkInput = document.getElementById("link");
+      const titleInput = document.getElementById("title");
+      const summaryInput = document.getElementById("summary");
       const categorySelect = document.getElementById("category");
       
       if (!linkInput.value) {
@@ -923,9 +966,10 @@
         
         const data = {
           link: linkInput.value,
-          summary: document.getElementById("summary").value,
+          title: titleInput.value,
+          summary: summaryInput.value,
           date: document.getElementById("date").value,
-          category: categorySelect.value,
+          category: categorySelect.value
         };
 
         const res = await fetch("http://localhost:5000/add-link", {
@@ -951,41 +995,6 @@
         }
       } catch (error) {
         showStatus("status", `Error: ${error.message}`, "error");
-      }
-    });
-
-    // Function to scrape article content
-    async function scrapeArticle(url) {
-      try {
-        showStatus("status", "Scraping article...", "loading");
-        
-        const response = await fetch("http://localhost:5000/scrape-article", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ url: url })
-        });
-        
-        const data = await response.json();
-        
-        if (data.status === "success") {
-          // Auto-fill the summary field
-          document.getElementById("summary").value = data.summary;
-          showStatus("status", "Article scraped successfully!", "success");
-        } else {
-          showStatus("status", `Error: ${data.error}`, "error");
-        }
-      } catch (error) {
-        showStatus("status", `Error: ${error.message}`, "error");
-      }
-    }
-
-    // Add event listener for URL input
-    document.getElementById("link").addEventListener("blur", function() {
-      const url = this.value.trim();
-      if (url && url.startsWith('http')) {
-        scrapeArticle(url);
       }
     });
   </script>

@@ -121,6 +121,7 @@ def add_link():
         link = data.get("link")
         summary = data.get("summary", "")
         date = data.get("date", datetime.today().strftime("%m/%d/%Y"))
+        title = data.get("title", "")  # Get the title from the request
         
         if not tab_name or not link:
             return jsonify({"error": "Worksheet name and link are required"}), 400
@@ -134,8 +135,11 @@ def add_link():
             
         worksheet = sheet.worksheet(tab_name)
         
-        # Only add the data row
-        worksheet.append_row([link, summary, date])
+        # Create HYPERLINK formula
+        hyperlink_formula = f'=HYPERLINK("{link}", "{title}")'
+        
+        # Add the data row with HYPERLINK formula using USER_ENTERED
+        worksheet.append_row([hyperlink_formula, summary, date], value_input_option="USER_ENTERED")
         logger.info(f"Added link to worksheet '{tab_name}': {link[:50]}...")
         return jsonify({"status": "success"}), 200
     except Exception as e:
@@ -288,11 +292,10 @@ def scrape_article():
             article.parse()
             
             if article.text:
-                formatted_summary = f"Title: {article.title}\n\nSummary: {article.text[:500]}..."
                 return jsonify({
                     "status": "success",
                     "title": article.title,
-                    "summary": formatted_summary
+                    "summary": article.text[:500] + "..."
                 }), 200
         except Exception as e:
             logger.warning(f"Initial scraping attempt failed: {str(e)}")
@@ -324,12 +327,10 @@ def scrape_article():
                 # Fallback to body text
                 text = soup.body.get_text(strip=True) if soup.body else "No content found"
             
-            formatted_summary = f"Title: {title}\n\nSummary: {text[:500]}..."
-            
             return jsonify({
                 "status": "success",
                 "title": title,
-                "summary": formatted_summary
+                "summary": text[:500] + "..."
             }), 200
             
         except Exception as fallback_error:
