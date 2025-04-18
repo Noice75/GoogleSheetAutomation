@@ -156,6 +156,35 @@
       background: rgba(255, 255, 255, 0.8);
       backdrop-filter: blur(5px);
       -webkit-backdrop-filter: blur(5px);
+      cursor: pointer;
+    }
+
+    .form-control[type="date"] {
+      position: relative;
+      padding-right: 2.5rem;
+    }
+
+    .form-control[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      filter: invert(0);
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+
+    .form-control[type="date"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+    }
+
+    [data-theme="dark"] .form-control[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+    }
+
+    .form-control[type="date"]:focus::-webkit-calendar-picker-indicator {
+      opacity: 1;
     }
     
     .form-control:focus {
@@ -192,12 +221,12 @@
       border-top-right-radius: 12px;
       border-bottom-right-radius: 12px;
       height: 100%;
-      padding: 0 1.25rem;
-      min-width: 100px;
+      padding: 0 0.75rem;
+      min-width: 40px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.95rem;
+      font-size: 0.875rem;
       font-weight: 500;
       transition: all 0.2s ease;
       background: var(--primary);
@@ -205,8 +234,22 @@
       border: none;
       white-space: nowrap;
       flex-shrink: 0;
-      position: relative;
-      z-index: 1;
+    }
+    
+    .input-group-append .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .input-group-append .btn span {
+      display: inline-block;
+      transition: transform 0.3s ease;
+      font-weight: bold;
+    }
+    
+    .input-group-append .btn:hover span {
+      transform: rotate(180deg);
     }
     
     .input-group .form-control:focus {
@@ -1133,20 +1176,43 @@
       background: rgba(0, 0, 0, 0.1);
     }
     
-    [data-theme="light"] .input-group-append .btn {
+    [data-theme="light"] .input-group {
+      position: relative;
+      display: flex;
+      align-items: stretch;
+      width: 100%;
+    }
+
+    [data-theme="light"] .input-group .form-control {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      border-right: none;
+      flex: 1;
+      min-width: 0;
       background: rgba(255, 255, 255, 0.6);
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      color: var(--text-primary);
     }
-    
+
+    [data-theme="light"] .input-group-append {
+      display: flex;
+      margin-left: -1px;
+      flex-shrink: 0;
+    }
+
+    [data-theme="light"] .input-group-append .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      min-width: 40px;
+      padding: 0 0.75rem;
+      font-size: 0.875rem;
+    }
+
     [data-theme="light"] .input-group-append .btn:hover {
-      background: rgba(255, 255, 255, 0.8);
-      border-color: rgba(0, 0, 0, 0.2);
-      color: var(--primary);
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     }
-    
+
     [data-theme="light"] select.form-control {
       background: rgba(255, 255, 255, 0.6);
       backdrop-filter: blur(5px);
@@ -1236,6 +1302,23 @@
       color: var(--text-secondary);
       font-size: 0.9rem;
     }
+
+    /* Specific styles for Update ID button */
+    #updateSheetIdBtn {
+      min-width: 100px;
+      padding: 0 1.25rem;
+      font-size: 0.95rem;
+    }
+
+    [data-theme="light"] #updateSheetIdBtn {
+      position: relative;
+      z-index: 1;
+    }
+
+    [data-theme="light"] .input-group .form-control:focus {
+      position: relative;
+      z-index: 0;
+    }
   </style>
 </head>
 <body>
@@ -1318,18 +1401,6 @@
     <div id="manage-worksheets" class="tab-content">
       <div class="card">
         <div class="card-header">
-          <h2>Create New Worksheet</h2>
-        </div>
-        <div class="form-group">
-          <label for="newWorksheetName">Worksheet Name</label>
-          <input type="text" id="newWorksheetName" class="form-control" placeholder="Enter descriptive name">
-        </div>
-        <button type="button" id="createWorksheetBtn" class="btn btn-success">Create Worksheet</button>
-        <div id="worksheetStatus" class="hidden"></div>
-      </div>
-
-      <div class="card mt-4">
-        <div class="card-header">
           <h2>Manage Sheet ID</h2>
         </div>
         <div class="form-group">
@@ -1343,6 +1414,18 @@
           <small class="text-muted mt-2" style="display: block;">Current Sheet ID will be loaded automatically.</small>
         </div>
         <div id="sheetIdStatus" class="hidden"></div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-header">
+          <h2>Create New Worksheet</h2>
+        </div>
+        <div class="form-group">
+          <label for="newWorksheetName">Worksheet Name</label>
+          <input type="text" id="newWorksheetName" class="form-control" placeholder="Enter descriptive name">
+        </div>
+        <button type="button" id="createWorksheetBtn" class="btn btn-success">Create Worksheet</button>
+        <div id="worksheetStatus" class="hidden"></div>
       </div>
     </div>
 
@@ -1507,7 +1590,13 @@
       }
     });
 
-    // Fetch worksheets when page loads
+    // Add event listener for date input
+    document.getElementById("date").addEventListener("click", function(e) {
+      e.preventDefault();
+      this.showPicker();
+    });
+
+    // Initialize date field
     document.addEventListener('DOMContentLoaded', () => {
       // Set default date to today
       const today = new Date().toISOString().split('T')[0];
