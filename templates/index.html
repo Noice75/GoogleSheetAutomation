@@ -69,11 +69,12 @@
       background: var(--card-bg);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      border-radius: 16px;
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+      border: none;
       padding: 2rem;
-      margin-bottom: 2rem;
+      margin-bottom: 20px;
       transition: all 0.3s ease;
       position: relative;
     }
@@ -467,6 +468,8 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(0,0,0,.125);
+      padding: 15px 20px;
     }
     
     .card-header h2 {
@@ -1400,16 +1403,24 @@
     }
 
     .result-url {
-      font-weight: 500;
-      margin-bottom: 0.25rem;
+      margin-bottom: 5px;
       word-break: break-all;
     }
 
     .result-meta {
-      display: flex;
-      gap: 1rem;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       color: var(--text-secondary);
+    }
+
+    .result-url a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .result-url a:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
     }
 
     .progress-container {
@@ -1821,6 +1832,1106 @@
       box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
       transform: translateY(-1px);
     }
+
+    /* Enhanced styles for collapsible UI that integrate with the theme */
+    .toggle-collapse {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      background-color: var(--light);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .toggle-collapse:after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background: var(--primary-light);
+      border-radius: 50%;
+      transform: scale(0);
+      transition: transform 0.3s ease;
+    }
+
+    .toggle-collapse:hover:after {
+      transform: scale(1);
+    }
+
+    .toggle-collapse.active {
+      background-color: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .toggle-collapse i {
+      transition: transform 0.3s ease;
+      position: relative;
+      z-index: 2;
+    }
+
+    .toggle-collapse:hover i {
+      transform: scale(1.2);
+    }
+
+    .accordion-collapse, .collapsible {
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+      opacity: 0;
+      position: relative;
+      background-color: var(--light);
+    }
+
+    .accordion-collapse[style*="display: block"], .collapsible[style*="display: block"] {
+      opacity: 1;
+    }
+
+    .accordion-header, .card-header {
+      cursor: pointer;
+      background-color: var(--card-bg);
+      transition: background-color 0.2s ease;
+      border-left: 3px solid transparent;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .accordion-header:hover, .card-header:hover {
+      background-color: var(--primary-light);
+    }
+
+    .accordion-header.active, .card-header.active {
+      border-left-color: var(--primary);
+    }
+
+    .accordion-item {
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      transition: box-shadow 0.3s ease;
+      background-color: var(--light);
+    }
+
+    .accordion-item:hover {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .accordion-body {
+      padding: 0;
+      background-color: var(--light);
+    }
+
+    .list-group-item {
+      padding: 12px 20px;
+      border-left: none;
+      border-right: none;
+      transition: background-color 0.2s ease;
+      border-color: var(--border);
+      background-color: var(--light);
+      color: var(--text-primary);
+    }
+
+    .list-group-item:hover {
+      background-color: var(--primary-light);
+    }
+
+    /* Fix for table styles in accordion */
+    .accordion-body table {
+      background-color: var(--light);
+      color: var(--text-primary);
+    }
+
+    .accordion-body table th {
+      background-color: var(--primary-light);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    .accordion-body table td {
+      border-color: var(--border);
+    }
+
+    /* Make sure collapsible content is visible when expanded */
+    .collapsible[style*="display: block"] {
+      max-height: none !important;
+    }
+
+    /* Styles for category sections in All Crawled Links */
+    .category-section {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: var(--light);
+    }
+
+    .category-header {
+      background-color: var(--card-bg) !important;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border);
+      font-weight: 500;
+    }
+
+    .category-content {
+      background-color: var(--light);
+    }
+
+    /* Fix table styles in accordion */
+    .accordion-body table,
+    .category-content table {
+      background-color: var(--light);
+      color: var(--text-primary);
+      width: 100%;
+    }
+
+    .accordion-body table th,
+    .category-content table th {
+      background-color: var(--primary-light);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    .accordion-body table td,
+    .category-content table td {
+      border-color: var(--border);
+    }
+
+    .accordion-body table td a,
+    .category-content table td a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .accordion-body table td a:hover,
+    .category-content table td a:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
+    }
+
+    /* Additional styles for publisher sections in Crawler Results */
+    .publisher-section {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      background-color: var(--card-bg);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      transition: box-shadow 0.3s ease, transform 0.2s ease, background-color 0.3s ease;
+    }
+
+    .publisher-section:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .publisher-header {
+      background-color: var(--card-bg) !important;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border);
+      transition: background-color 0.2s ease, color 0.3s ease;
+      padding: 15px 20px !important;
+      font-weight: 500;
+    }
+
+    .publisher-header.active {
+      border-left: 3px solid var(--primary);
+      background-color: var(--primary-light) !important;
+    }
+
+    .publisher-header:hover {
+      background-color: var(--primary-light) !important;
+    }
+
+    .publisher-header .publisher-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .publisher-header .badge {
+      font-size: 0.8rem;
+      padding: 0.35em 0.65em;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .publisher-content {
+      background-color: var(--light);
+      padding: 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .publisher-content .list-group {
+      border-radius: 0;
+      margin: 0;
+    }
+
+    .publisher-content .list-group-item {
+      background-color: var(--light);
+      color: var(--text-primary);
+      border-color: var(--border);
+      padding: 15px 20px;
+      transition: background-color 0.2s ease;
+      border-left: none;
+      border-right: none;
+    }
+
+    .publisher-content .list-group-item:last-child {
+      border-bottom: none;
+    }
+
+    .publisher-content .list-group-item:hover {
+      background-color: var(--primary-light);
+    }
+
+    .result-url {
+      margin-bottom: 8px;
+      word-break: break-all;
+      font-weight: 500;
+    }
+
+    .result-url a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .result-url a:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
+    }
+
+    .result-meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .result-meta .badge {
+      font-size: 0.75rem;
+      font-weight: normal;
+    }
+
+    /* Enhance the card containing all results */
+    #crawlerResults .card {
+      background: var(--card-bg);
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    #crawlerResults .card-header {
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 15px 20px;
+    }
+
+    #crawlerResults .card-body {
+      padding: 20px;
+      background-color: var(--light);
+    }
+
+    /* Enhance the collapse toggle buttons */
+    .toggle-collapse {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      background-color: var(--light);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .toggle-collapse:hover {
+      background-color: var(--primary-light);
+      transform: translateY(-1px);
+    }
+
+    .toggle-collapse.active {
+      background-color: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Fix badge styling to integrate with theme */
+    .badge {
+      font-weight: 500;
+      padding: 0.35em 0.65em;
+      border-radius: 4px;
+    }
+
+    .badge.bg-primary {
+      background-color: var(--primary) !important;
+      color: #fff;
+    }
+
+    .badge.bg-secondary {
+      background-color: var(--text-secondary) !important;
+      color: #fff;
+    }
+
+    /* Fix list-group styling for theme */
+    .list-group {
+      border-radius: 0.25rem;
+      overflow: hidden;
+    }
+
+    .list-group-item {
+      background-color: var(--light);
+      color: var(--text-primary);
+    }
+
+    .list-group-item:hover {
+      background-color: var(--primary-light);
+    }
+
+    /* Fix table striping for theme compatibility */
+    .table-striped > tbody > tr:nth-of-type(odd) {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .table-striped > tbody > tr:hover {
+      background-color: var(--primary-light);
+    }
+
+    /* Prevent content jumping when toggling */
+    .publisher-content, .category-content {
+      position: relative;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Fix button styles for theme */
+    .btn-outline-primary {
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .btn-outline-primary:hover {
+      background-color: var(--primary);
+      color: #fff;
+    }
+
+    .btn-outline-secondary {
+      color: var(--text-secondary);
+      border-color: var(--border);
+    }
+
+    .btn-outline-secondary:hover {
+      background-color: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .btn-outline-secondary.active {
+      background-color: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    /* Enhanced styling for the publisher sections in Crawler Results - with dark theme support */
+    .publisher-section {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      background-color: var(--card-bg);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      transition: box-shadow 0.3s ease, transform 0.2s ease, background-color 0.3s ease;
+    }
+
+    .publisher-section:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .publisher-header {
+      background-color: var(--card-bg) !important;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border);
+      transition: background-color 0.2s ease, color 0.3s ease;
+      padding: 15px 20px !important;
+      font-weight: 500;
+    }
+
+    .publisher-header.active {
+      border-left: 3px solid var(--primary);
+      background-color: var(--primary-light) !important;
+    }
+
+    .publisher-header:hover {
+      background-color: var(--primary-light) !important;
+    }
+
+    .publisher-header .publisher-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .publisher-header .badge {
+      font-size: 0.8rem;
+      padding: 0.35em 0.65em;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .publisher-content {
+      background-color: var(--card-bg);
+      padding: 0;
+      border-top: 1px solid var(--border);
+      transition: background-color 0.3s ease;
+    }
+
+    .publisher-content .list-group {
+      border-radius: 0;
+      margin: 0;
+    }
+
+    .publisher-content .list-group-item {
+      background-color: var(--card-bg);
+      color: var(--text-primary);
+      border-color: var(--border);
+      padding: 15px 20px;
+      transition: background-color 0.2s ease, color 0.3s ease;
+      border-left: none;
+      border-right: none;
+    }
+
+    .publisher-content .list-group-item:last-child {
+      border-bottom: none;
+    }
+
+    .publisher-content .list-group-item:hover {
+      background-color: var(--primary-light);
+    }
+
+    .result-url {
+      margin-bottom: 8px;
+      word-break: break-all;
+      font-weight: 500;
+    }
+
+    .result-url a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .result-url a:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
+    }
+
+    .result-meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: var(--text-secondary);
+    }
+
+    .result-meta .badge {
+      font-size: 0.75rem;
+      font-weight: normal;
+    }
+
+    .result-meta .small {
+      color: var(--text-secondary);
+    }
+
+    /* Enhance the card containing all results */
+    #crawlerResults .card {
+      background: var(--card-bg);
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    #crawlerResults .card-header {
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 15px 20px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    #crawlerResults .card-body {
+      padding: 20px;
+      background-color: var(--card-bg);
+      transition: background-color 0.3s ease;
+    }
+
+    /* Category sections in All Crawled Links */
+    .category-section {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: var(--card-bg);
+      transition: background-color 0.3s ease;
+    }
+
+    .category-header {
+      background-color: var(--card-bg) !important;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border);
+      font-weight: 500;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .category-content {
+      background-color: var(--card-bg);
+      transition: background-color 0.3s ease;
+    }
+
+    /* Fix table styles for dark mode */
+    .accordion-body table,
+    .category-content table {
+      background-color: var(--card-bg);
+      color: var(--text-primary);
+      width: 100%;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .accordion-body table th,
+    .category-content table th {
+      background-color: var(--primary-light);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    .accordion-body table td,
+    .category-content table td {
+      border-color: var(--border);
+    }
+
+    .table-striped > tbody > tr:nth-of-type(odd) {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .table-striped > tbody > tr:hover {
+      background-color: var(--primary-light);
+    }
+
+    /* Dark mode specific overrides */
+    [data-theme="dark"] .publisher-section,
+    [data-theme="dark"] .category-section,
+    [data-theme="dark"] #crawlerResults .card {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    [data-theme="dark"] .publisher-header,
+    [data-theme="dark"] .category-header,
+    [data-theme="dark"] .publisher-content,
+    [data-theme="dark"] .category-content,
+    [data-theme="dark"] #crawlerResults .card-header,
+    [data-theme="dark"] #crawlerResults .card-body {
+      background-color: var(--card-bg) !important;
+      color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .publisher-content .list-group-item,
+    [data-theme="dark"] .accordion-body table,
+    [data-theme="dark"] .category-content table {
+      background-color: var(--card-bg);
+      color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .publisher-header.active,
+    [data-theme="dark"] .publisher-header:hover,
+    [data-theme="dark"] .publisher-content .list-group-item:hover {
+      background-color: rgba(16, 163, 127, 0.15) !important;
+    }
+
+    [data-theme="dark"] .text-muted {
+      color: var(--text-secondary) !important;
+    }
+
+    /* Badges in dark mode */
+    [data-theme="dark"] .badge {
+      font-weight: 500;
+    }
+
+    [data-theme="dark"] .badge.bg-primary {
+      background-color: var(--primary) !important;
+      color: #fff;
+    }
+
+    [data-theme="dark"] .badge.bg-secondary {
+      background-color: rgba(102, 102, 102, 0.8) !important;
+      color: #fff;
+    }
+
+    /* Fix for table striping in dark mode */
+    [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    [data-theme="dark"] .table-striped > tbody > tr:hover {
+      background-color: rgba(16, 163, 127, 0.15);
+    }
+
+    /* Additional fixes for dynamic content in dark mode */
+    [data-theme="dark"] .list-group-item {
+      background-color: var(--card-bg) !important;
+      color: var(--text-primary) !important;
+      border-color: var(--border) !important;
+    }
+
+    [data-theme="dark"] .result-url a {
+      color: var(--primary);
+    }
+
+    [data-theme="dark"] .result-url a:hover {
+      color: var(--primary-dark);
+    }
+
+    /* Fix spacing in result items */
+    .list-group-item {
+      padding: 15px 20px !important;
+    }
+
+    /* Fix card headers in dark mode for proper contrast */
+    [data-theme="dark"] .card-header {
+      background-color: var(--card-bg) !important;
+      border-bottom-color: var(--border) !important;
+    }
+
+    /* Fix input fields in dark mode */
+    [data-theme="dark"] .form-control {
+      background-color: rgba(30, 30, 30, 0.8) !important;
+      color: var(--text-primary) !important;
+      border-color: var(--border) !important;
+    }
+
+    /* Prevent hover effects from causing issues */
+    /* Prevent hover effects from causing collapse */
+    .publisher-content,
+    .publisher-header,
+    .list-group-item {
+      pointer-events: auto !important;
+    }
+
+    .toggle-collapse {
+      pointer-events: auto !important;
+      z-index: 5;
+    }
+
+    /* Make sure expanded content stays visible */
+    .publisher-content[style*="display: block"] {
+      display: block !important;
+    }
+
+    /* Disable any transitions that might cause issues */
+    .publisher-content {
+      transition: none !important;
+    }
+
+    /* Additional CSS to ensure publisher content displays properly */
+    .publisher-section {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      background-color: var(--card-bg);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .publisher-header {
+      padding: 15px 20px;
+      background-color: var(--card-bg);
+      border-bottom: 1px solid transparent;
+      transition: none;
+    }
+
+    .publisher-section.active .publisher-header {
+      border-bottom-color: var(--border);
+    }
+
+    .publisher-content {
+      padding: 0;
+      background-color: var(--card-bg);
+    }
+
+    .publisher-toggle {
+      width: auto;
+      white-space: nowrap;
+      min-width: 120px;
+    }
+
+    /* Add these styles at the end of the style section */
+    .category-header {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+    }
+
+    .category-content {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-top: none;
+    }
+
+    .link-url {
+      display: inline-block;
+      max-width: 500px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .url-cell {
+      max-width: 500px;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #allLinksCard .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .filter-controls select {
+      min-width: 150px;
+      max-width: 200px;
+    }
+
+    @media (max-width: 768px) {
+      .filter-controls {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .filter-controls select, 
+      .filter-controls button {
+        width: 100%;
+        margin-bottom: 5px;
+      }
+    }
+
+    /* Update these styles at the end of the style section */
+    .all-links-table {
+      width: 100%;
+      margin-top: 0;
+    }
+
+    .all-links-table table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 0;
+    }
+
+    .all-links-table th {
+      position: sticky;
+      top: 0;
+      background-color: var(--card-bg);
+      z-index: 1;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .url-cell {
+      max-width: 40%;
+      min-width: 200px;
+    }
+
+    .link-url {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .table-responsive {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .count-badge {
+      font-size: 0.8em;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    #allLinksCard {
+      margin-bottom: 2rem;
+    }
+
+    #allLinksCard .card-header {
+      border-bottom: 1px solid var(--border);
+    }
+
+    #allCrawledLinks {
+      padding: 0; /* Remove padding to maximize space */
+    }
+
+    /* Make the table fill the entire card */
+    .all-links-table, .table-responsive {
+      height: 100%;
+    }
+
+    /* Ensure the table rows have proper height */
+    .all-links-table tr {
+      height: 50px;
+    }
+
+    /* Ensure table cells have proper padding */
+    .all-links-table td, .all-links-table th {
+      padding: 12px 16px;
+      vertical-align: middle;
+    }
+
+    /* Improve the hover effect */
+    .all-links-table tr:hover {
+      background-color: var(--hover-bg) !important;
+    }
+
+    /* Add this to the style section */
+    #crawlerResults {
+      padding: 0;
+    }
+
+    /* Add these styles for the Run Crawler section */
+    .run-crawler-card {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+    }
+
+    .crawler-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 768px) {
+      .crawler-options {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .crawler-section {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .crawler-section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+    }
+
+    .crawler-section-title i {
+      margin-right: 8px;
+      color: var(--primary);
+    }
+
+    .checkbox-group {
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background-color: var(--input-bg);
+    }
+
+    .checkbox-item {
+      margin-bottom: 8px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .checkbox-item:hover {
+      background-color: var(--hover-bg);
+    }
+
+    .checkbox-item label {
+      margin-left: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .max-pages-control {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .max-pages-control input {
+      max-width: 100px;
+    }
+
+    .max-pages-control label {
+      margin-bottom: 0;
+      white-space: nowrap;
+    }
+
+    .start-crawler-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .crawler-action-btn {
+      min-width: 140px;
+      height: 46px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .crawler-action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .crawler-action-btn i {
+      font-size: 1.1em;
+    }
+
+    .crawler-help-text {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 8px;
+      max-width: 80%;
+    }
+
+    .category-container {
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-light);
+      padding-bottom: 8px;
+    }
+
+    .category-header {
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 8px;
+      background-color: var(--card-bg);
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .tag-count {
+      font-size: 0.8em;
+      color: var(--text-muted);
+      margin-left: 8px;
+    }
+
+    /* Update the crawler help text styles for better readability */
+    .crawler-help-text {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-top: 6px;
+      max-width: 90%;
+      line-height: 1.4;
+      opacity: 0.8;
+    }
+
+    .crawler-section-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+    }
+
+    .crawler-section {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+
+    .start-crawler-container {
+      display: flex;
+      flex-direction: column;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (min-width: 768px) {
+      .start-crawler-container {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .start-crawler-container .crawler-help-text {
+        margin-left: 16px;
+        margin-top: 0;
+      }
+    }
+
+    /* Improve the crawler card */
+    .card-body {
+      padding: 16px;
+    }
+
+    /* Better spacing for checkboxes */
+    .checkbox-group {
+      max-height: 180px;
+      padding: 6px;
+    }
+
+    .checkbox-item {
+      margin-bottom: 6px;
+      padding: 4px 6px;
+    }
+
+    /* Smaller icons */
+    .crawler-section-title i {
+      font-size: 0.9em;
+    }
   </style>
 </head>
 <body>
@@ -1933,81 +3044,67 @@
     </div>
 
     <div id="crawler" class="tab-content">
-      <div class="card">
-        <div class="card-header">
-          <h2>Manage Crawler Settings</h2>
-        </div>
-        <div class="form-group">
-          <label for="crawlerCategory">Category</label>
-          <select id="crawlerCategory" class="form-control">
-            <option value="">Loading worksheets...</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label>Category Tags <span class="tag-hint">(used in search queries)</span></label>
-          <div class="tags-container">
-            <div id="tagsDisplay" class="tags-display">
-              <div class="text-center">
-                <p>Select a category to manage tags</p>
-              </div>
-            </div>
-            <div class="tag-input-container">
-              <input type="text" id="newTag" class="form-control" placeholder="Add new tag">
-              <button type="button" id="addTagBtn" class="btn btn-sm btn-primary">Add Tag</button>
-            </div>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="publisherName">Publisher Name</label>
-          <input type="text" id="publisherName" class="form-control" placeholder="Enter publisher name">
-        </div>
-        <div class="form-group">
-          <label for="publisherUrl">Publisher URL</label>
-          <input type="url" id="publisherUrl" class="form-control" placeholder="https://example.com">
-        </div>
-        <button type="button" id="addPublisherBtn" class="btn btn-primary">Add Publisher</button>
-        <div id="publisherStatus" class="hidden"></div>
-      </div>
-
-      <div class="card mt-4">
-        <div class="card-header">
-          <h2>Current Publishers</h2>
-        </div>
-        <div id="publishersList" class="publishers-list">
-          <div class="text-center">
-            <p>Loading publishers...</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="card mt-4">
+      <div class="card mt-4 run-crawler-card">
         <div class="card-header">
           <h2>Run Crawler</h2>
         </div>
-        <div class="form-group">
-          <label>Categories to Crawl</label>
-          <div id="categoryCheckboxes" class="checkbox-group">
-            <div class="text-center">
-              <p>Loading worksheets...</p>
+        <div class="card-body">
+          <div class="crawler-options">
+            <div class="crawler-section">
+              <div class="crawler-section-title">
+                <i class="fas fa-layer-group"></i> Categories
+              </div>
+              <div id="categoryCheckboxes" class="checkbox-group">
+                <div class="text-center">
+                  <p>Loading...</p>
+                </div>
+              </div>
+              <div class="crawler-help-text">
+                Choose categories to search for content.
+              </div>
+            </div>
+            
+            <div class="crawler-section">
+              <div class="crawler-section-title">
+                <i class="fas fa-newspaper"></i> Publishers
+              </div>
+              <div id="publisherCheckboxes" class="checkbox-group">
+                <div class="text-center">
+                  <p>Select categories first</p>
+                </div>
+              </div>
+              <div class="crawler-help-text">
+                Select publisher websites to search.
+              </div>
             </div>
           </div>
-        </div>
-        <div class="form-group">
-          <label>Publishers to Crawl</label>
-          <div id="publisherCheckboxes" class="checkbox-group">
-            <div class="text-center">
-              <p>Select categories first</p>
+          
+          <div class="crawler-section">
+            <div class="crawler-section-title">
+              <i class="fas fa-cog"></i> Settings
+            </div>
+            <div class="max-pages-control">
+              <label for="maxPages">Max pages:</label>
+              <input type="number" id="maxPages" class="form-control" value="3" min="1" max="5">
+            </div>
+            <div class="crawler-help-text">
+              Higher values find more content but take longer.
             </div>
           </div>
+          
+          <div class="start-crawler-container">
+            <div>
+              <button type="button" id="startCrawlerBtn" class="btn btn-success crawler-action-btn">
+                <i class="fas fa-play"></i> Start Crawler
+              </button>
+            </div>
+            <div class="crawler-help-text">
+              Searches for relevant content on selected websites.
+            </div>
+          </div>
+          
+          <div id="crawlerStatus" class="hidden"></div>
         </div>
-        <div class="form-group">
-          <label for="maxPages">Maximum Pages to Crawl</label>
-          <input type="number" id="maxPages" class="form-control" value="5" min="1" max="20">
-        </div>
-        <button type="button" id="startCrawlerBtn" class="btn btn-success">Start Crawler</button>
-        <div id="crawlerStatus" class="hidden"></div>
       </div>
 
       <div class="card mt-4">
@@ -2056,6 +3153,55 @@
           </div>
         </div>
       </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Manage Crawler Settings</h2>
+        </div>
+        <div class="form-group">
+          <label for="crawlerCategory">Category</label>
+          <select id="crawlerCategory" class="form-control">
+            <option value="">Loading worksheets...</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Category Tags <span class="tag-hint">(used in search queries)</span></label>
+          <div class="tags-container">
+            <div id="tagsDisplay" class="tags-display">
+              <div class="text-center">
+                <p>Select a category to manage tags</p>
+              </div>
+            </div>
+            <div class="tag-input-container">
+              <input type="text" id="newTag" class="form-control" placeholder="Add new tag">
+              <button type="button" id="addTagBtn" class="btn btn-sm btn-primary">Add Tag</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="publisherName">Publisher Name</label>
+          <input type="text" id="publisherName" class="form-control" placeholder="Enter publisher name">
+        </div>
+        <div class="form-group">
+          <label for="publisherUrl">Publisher URL</label>
+          <input type="url" id="publisherUrl" class="form-control" placeholder="https://example.com">
+        </div>
+        <button type="button" id="addPublisherBtn" class="btn btn-primary">Add Publisher</button>
+        <div id="publisherStatus" class="hidden"></div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-header">
+          <h2>Current Publishers</h2>
+        </div>
+        <div id="publishersList" class="publishers-list">
+          <div class="text-center">
+            <p>Loading publishers...</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="modal" id="confirmModal">
@@ -2077,6 +3223,76 @@
   </div>
 
   <script>
+    // Initialize after the document is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize all tabs and event listeners first
+      
+      // Load sheet ID and check connection
+      getSheetId();
+      
+      // Load worksheets if sheet ID is available
+      if (document.getElementById('sheetIdDisplay').textContent) {
+        loadWorksheets();
+      }
+      
+      // Add event listeners for tabs
+      document.querySelectorAll('.nav-link').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Get target tab
+          const target = this.getAttribute('href');
+          
+          // Hide all tabs
+          document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.style.display = 'none';
+          });
+          
+          // Show target tab
+          document.querySelector(target).style.display = 'block';
+          
+          // Update active tab
+          document.querySelectorAll('.nav-link').forEach(t => {
+            t.classList.remove('active');
+          });
+          
+          this.classList.add('active');
+          
+          // If we're switching to a tab that might have collapsible elements,
+          // reinitialize them to ensure they work correctly
+          setTimeout(() => {
+            refreshCollapsibles();
+          }, 100);
+        });
+      });
+      
+      // Add event listeners for adding resources, creating worksheets, etc.
+      document.getElementById('addResourceForm').addEventListener('submit', addResource);
+      document.getElementById('createWorksheetForm').addEventListener('submit', createWorksheet);
+      document.getElementById('updateSheetIdForm').addEventListener('submit', updateSheetId);
+      document.getElementById('deleteWorksheetForm').addEventListener('submit', deleteWorksheet);
+      
+      // Start the crawler with the selected options when Start button is clicked
+      document.getElementById('startCrawlerBtn').addEventListener('click', startCrawler);
+      
+      // Initialize publisher form
+      document.getElementById('addPublisherForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        addPublisher();
+      });
+      
+      // Load crawler publishers
+      loadPublishers();
+      
+      // Initialize collapsible elements after all other elements are set up
+      initializeCollapsibles();
+      
+      // Initialize polling once with a slower interval - first call happens in the crawler tab initialization
+      if (!pollingInterval) {
+        pollCrawlerStatus();
+      }
+    });
+
     // Tab navigation
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', function() {
@@ -2513,8 +3729,43 @@
       }
     }
 
+    // Add this function to enforce max pages value
+    function enforceMaxPages() {
+      const maxPagesInput = document.getElementById('maxPages');
+      if (!maxPagesInput) return;
+      
+      // Add input event listener
+      maxPagesInput.addEventListener('input', function() {
+        let value = parseInt(this.value) || 0;
+        if (value > 5) {
+          this.value = 5;
+        }
+      });
+      
+      // Also check on blur for any manual edits
+      maxPagesInput.addEventListener('blur', function() {
+        let value = parseInt(this.value) || 0;
+        if (value > 5) {
+          this.value = 5;
+        } else if (value < 1 || isNaN(value)) {
+          this.value = 1;
+        }
+      });
+      
+      // Initial check
+      let value = parseInt(maxPagesInput.value) || 0;
+      if (value > 5) {
+        maxPagesInput.value = 5;
+      } else if (value < 1 || isNaN(value)) {
+        maxPagesInput.value = 1;
+      }
+    }
+
     // Crawler functionality
     document.addEventListener('DOMContentLoaded', () => {
+      // Enforce max pages limit
+      enforceMaxPages();
+      
       // Load worksheets for crawler categories
       loadCrawlerCategories();
       
@@ -2527,6 +3778,15 @@
       // Start crawler button
       document.getElementById('startCrawlerBtn').addEventListener('click', startCrawler);
       
+      // Additional check on form submission
+      document.getElementById('startCrawlerBtn').addEventListener('click', function() {
+        const maxPagesInput = document.getElementById('maxPages');
+        let value = parseInt(maxPagesInput.value) || 0;
+        if (value > 5) {
+          maxPagesInput.value = 5;
+        }
+      });
+      
       // Category checkboxes
       document.querySelectorAll('#categoryCheckboxes input').forEach(checkbox => {
         checkbox.addEventListener('change', updatePublisherCheckboxes);
@@ -2535,8 +3795,13 @@
       // Initial update of publisher checkboxes
       updatePublisherCheckboxes();
       
-      // Start polling for crawler status
-      setInterval(pollCrawlerStatus, 2000);
+      // Initialize polling once with a slower interval
+      if (!pollingInterval) {
+        // Start with 10-second intervals when idle
+        pollingInterval = setInterval(pollCrawlerStatus, 10000);
+        // Run once immediately
+        pollCrawlerStatus();
+      }
       
       // Category dropdown change event
       document.getElementById('crawlerCategory').addEventListener('change', loadCategoryTags);
@@ -2863,7 +4128,16 @@
         });
       });
       
-      const maxPages = parseInt(document.getElementById('maxPages').value);
+      // Enforce max pages limit before using the value
+      const maxPagesInput = document.getElementById('maxPages');
+      let maxPages = parseInt(maxPagesInput.value) || 3;
+      if (maxPages > 5) {
+        maxPages = 5;
+        maxPagesInput.value = 5;
+      } else if (maxPages < 1) {
+        maxPages = 1;
+        maxPagesInput.value = 1;
+      }
       
       if (selectedCategories.length === 0) {
         showStatus('crawlerStatus', 'Please select at least one category to crawl', 'error');
@@ -2978,6 +4252,9 @@
     }
 
     // Poll for crawler status
+    let pollingInterval = null;
+    let wasRunning = false;
+
     async function pollCrawlerStatus() {
       try {
         const response = await fetch('/crawler/status');
@@ -2986,6 +4263,31 @@
         if (data.status === 'success') {
           const crawler = data.crawler;
           const statusElement = document.getElementById('crawlerStatus');
+          
+          // Check if status changed from not running to running
+          if (!wasRunning && crawler.running) {
+            // Start polling more frequently when crawler starts
+            if (pollingInterval) {
+              clearInterval(pollingInterval);
+              pollingInterval = setInterval(pollCrawlerStatus, 2000);
+            }
+          } 
+          // Check if status changed from running to not running
+          else if (wasRunning && !crawler.running) {
+            // Slow down polling when crawler stops
+            if (pollingInterval) {
+              clearInterval(pollingInterval);
+              pollingInterval = setInterval(pollCrawlerStatus, 10000);
+            }
+            
+            // When crawler completes, load results once
+            if (crawler.current === "Crawling completed") {
+              loadCrawlerResults();
+            }
+          }
+          
+          // Update the wasRunning state for next check
+          wasRunning = crawler.running;
           
           // Create or update the status container
           let statusContainer = document.querySelector('.crawler-status-container');
@@ -3110,18 +4412,13 @@
             errorMessage.textContent = crawler.current;
             statusContainer.appendChild(errorMessage);
           }
-          
-          // Load results if completed
-          if (crawler.current === "Crawling completed") {
-            loadCrawlerResults();
-          }
         }
       } catch (error) {
         console.error('Error polling crawler status:', error);
       }
     }
 
-    // Load crawler results
+    // Implement a completely new approach to crawler results display without collapse issues
     async function loadCrawlerResults() {
       try {
         const response = await fetch('/crawler/results');
@@ -3134,29 +4431,60 @@
           resultsContainer.innerHTML = '';
           
           if (results.length === 0) {
-            resultsContainer.innerHTML = '<div class="text-center"><p>No results found.</p></div>';
+            resultsContainer.innerHTML = '<div class="text-center p-4"><p class="mb-0">No results found.</p></div>';
             return;
           }
           
-          for (const result of results) {
-            const resultItem = document.createElement('div');
-            resultItem.className = 'result-item';
-            
-            resultItem.innerHTML = `
-              <div class="result-url">
-                <a href="${result.url}" target="_blank">${result.url}</a>
-              </div>
-              <div class="result-meta">
-                <span>Publisher: ${result.publisher}</span>
-                <span>Category: ${result.category}</span>
-              </div>
-            `;
-            
-            resultsContainer.appendChild(resultItem);
+          // Create a simple, efficient table for all results
+          const resultsTable = document.createElement('div');
+          resultsTable.className = 'all-links-table';
+          resultsTable.id = 'crawlerResultsTable';
+          
+          resultsTable.innerHTML = `
+            <div class="table-responsive">
+              <table class="table table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th>URL</th>
+                    <th>Publisher</th>
+                    <th>Category</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${results.map(item => {
+                    return `
+                      <tr>
+                        <td class="url-cell">
+                          <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="link-url">
+                            ${item.url}
+                          </a>
+                        </td>
+                        <td>${item.publisher || 'Unknown'}</td>
+                        <td>${item.category || 'Uncategorized'}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+          
+          // Add the table to the container
+          resultsContainer.appendChild(resultsTable);
+          
+          // Update the counter in the section header
+          const crawlerCard = document.querySelector('.card:has(#crawlerResults)');
+          if (crawlerCard) {
+            const cardHeader = crawlerCard.querySelector('.card-header h2');
+            if (cardHeader) {
+              cardHeader.innerHTML = `Crawler Results <span class="count-badge">(${results.length} links)</span>`;
+            }
           }
         }
       } catch (error) {
         console.error('Error loading crawler results:', error);
+        document.getElementById('crawlerResults').innerHTML = 
+          '<div class="text-center p-4"><p class="text-danger mb-0">Error loading crawler results</p></div>';
       }
     }
     
@@ -3180,12 +4508,66 @@
         if (data.status === 'success') {
           const links = data.links;
           populateLinkFilters(links);
-          displayLinks(links);
+          
+          // Create container for links
+          const linksContainer = document.getElementById('allCrawledLinks');
+          linksContainer.innerHTML = '';
+          
+          // Create sections by category
+          if (links.length === 0) {
+            linksContainer.innerHTML = '<div class="text-center p-4"><p>No links found.</p></div>';
+            return;
+          }
+          
+          // Create a simple, efficient table for all links
+          const linksTable = document.createElement('div');
+          linksTable.className = 'all-links-table';
+          
+          linksTable.innerHTML = `
+            <div class="table-responsive">
+              <table class="table table-striped table-hover">
+                <thead>
+                  <tr>
+                    <th>URL</th>
+                    <th>Publisher</th>
+                    <th>Category</th>
+                    <th>Date Added</th>
+                  </tr>
+                </thead>
+                <tbody id="linksTableBody">
+                  ${links.map(item => {
+                    const date = item.timestamp ? new Date(item.timestamp).toLocaleDateString() : 'Unknown';
+                    return `
+                      <tr>
+                        <td class="url-cell">
+                          <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="link-url">
+                            ${item.url}
+                          </a>
+                        </td>
+                        <td>${item.publisher || 'Unknown'}</td>
+                        <td>${item.category || 'Uncategorized'}</td>
+                        <td>${date}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+          
+          // Add the table to the container
+          linksContainer.appendChild(linksTable);
+          
+          // Apply filters if they exist
+          applyLinkFilters();
+        } else {
+          document.getElementById('allCrawledLinks').innerHTML = 
+            '<div class="text-center p-4"><p class="text-danger mb-0">Error loading links</p></div>';
         }
       } catch (error) {
-        console.error('Error loading crawled links:', error);
+        console.error('Error loading all links:', error);
         document.getElementById('allCrawledLinks').innerHTML = 
-          '<div class="text-center"><p>Error loading crawled links</p></div>';
+          '<div class="text-center p-4"><p class="text-danger mb-0">Error loading links</p></div>';
       }
     }
     
@@ -3215,29 +4597,23 @@
       const publisherFilter = document.getElementById('publisherFilter');
       const categoryFilter = document.getElementById('categoryFilter');
       
-      // Get unique publishers and categories
-      const publishers = new Set();
-      const categories = new Set();
-      
-      links.forEach(link => {
-        if (link.publisher) publishers.add(link.publisher);
-        if (link.category) categories.add(link.category);
-      });
-      
-      // Clear existing options except first one
+      // Reset options
       publisherFilter.innerHTML = '<option value="">All Publishers</option>';
       categoryFilter.innerHTML = '<option value="">All Categories</option>';
       
-      // Add publisher options
-      Array.from(publishers).sort().forEach(publisher => {
+      // Get unique publishers and categories
+      const publishers = [...new Set(links.map(link => link.publisher).filter(Boolean))].sort();
+      const categories = [...new Set(links.map(link => link.category).filter(Boolean))].sort();
+      
+      // Add options
+      publishers.forEach(publisher => {
         const option = document.createElement('option');
         option.value = publisher;
         option.textContent = publisher;
         publisherFilter.appendChild(option);
       });
       
-      // Add category options
-      Array.from(categories).sort().forEach(category => {
+      categories.forEach(category => {
         const option = document.createElement('option');
         option.value = category;
         option.textContent = category;
@@ -3246,55 +4622,58 @@
     }
     
     // Apply link filters
-    async function applyLinkFilters() {
-      const publisher = document.getElementById('publisherFilter').value;
-      const category = document.getElementById('categoryFilter').value;
+    function applyLinkFilters() {
+      const publisherFilter = document.getElementById('publisherFilter').value;
+      const categoryFilter = document.getElementById('categoryFilter').value;
       
-      try {
-        let url = '/crawler/links';
-        let responseData;
+      // Get all rows in the table
+      const rows = document.querySelectorAll('#linksTableBody tr');
+      
+      rows.forEach(row => {
+        const publisher = row.cells[1].textContent;
+        const category = row.cells[2].textContent;
         
-        // Check which filter to apply
-        if (publisher && !category) {
-          // Filter by publisher
-          const response = await fetch(`/crawler/links/publisher/${publisher}`);
-          responseData = await response.json();
-        } else if (category && !publisher) {
-          // Filter by category
-          const response = await fetch(`/crawler/links/category/${category}`);
-          responseData = await response.json();
-        } else if (publisher && category) {
-          // Filter by both - need to fetch one and filter client-side
-          const response = await fetch(`/crawler/links/publisher/${publisher}`);
-          const data = await response.json();
-          
-          // Filter by category client-side
-          if (data.status === 'success') {
-            const filteredLinks = data.links.filter(link => link.category === category);
-            displayLinks(filteredLinks);
-            return;
-          }
+        // Check if row should be visible based on filters
+        const publisherMatch = !publisherFilter || publisher === publisherFilter;
+        const categoryMatch = !categoryFilter || category === categoryFilter;
+        
+        // Show or hide the row
+        if (publisherMatch && categoryMatch) {
+          row.style.display = '';
         } else {
-          // No filters - get all links
-          const response = await fetch(url);
-          responseData = await response.json();
+          row.style.display = 'none';
         }
-        
-        if (responseData && responseData.status === 'success') {
-          displayLinks(responseData.links);
-        }
-      } catch (error) {
-        console.error('Error applying filters:', error);
-        document.getElementById('allCrawledLinks').innerHTML = 
-          '<div class="text-center"><p>Error filtering links</p></div>';
+      });
+      
+      // Count visible rows
+      const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none').length;
+      
+      // Show count in the header
+      const allLinksCard = document.getElementById('allLinksCard');
+      const cardHeader = allLinksCard.querySelector('.card-header h2');
+      if (cardHeader) {
+        cardHeader.innerHTML = `All Crawled Links <span class="count-badge">(${visibleRows} showing)</span>`;
       }
     }
     
     // Reset link filters
     function resetLinkFilters() {
+      // Reset select elements
       document.getElementById('publisherFilter').value = '';
       document.getElementById('categoryFilter').value = '';
-      loadAllCrawledLinks();
+      
+      // Show all rows
+      const rows = document.querySelectorAll('#linksTableBody tr');
+      rows.forEach(row => {
+        row.style.display = '';
+      });
+      
+      // Update count in header
+      const allLinksCard = document.getElementById('allLinksCard');
+      const cardHeader = allLinksCard.querySelector('.card-header h2');
+      if (cardHeader) {
+        cardHeader.innerHTML = `All Crawled Links <span class="count-badge">(${rows.length} total)</span>`;
+      }
     }
     
     // Display links in table
@@ -3512,6 +4891,112 @@
       } catch (error) {
         showStatus('publisherStatus', `Error: ${error.message}`, 'error');
       }
+    }
+
+    // Initialize all collapsible elements
+    function initializeCollapsibles() {
+      // Clean up any existing event handlers for toggle buttons
+      document.removeEventListener('click', handleToggleClick);
+      
+      // Set initial state for all collapsible elements
+      document.querySelectorAll('.toggle-collapse').forEach(button => {
+        const targetId = button.getAttribute('data-target');
+        const targetElement = document.getElementById(targetId) || document.querySelector(`#${targetId}`);
+        
+        if (targetElement) {
+          // Make sure these elements have the right class
+          if (targetElement.classList.contains('accordion-collapse') || 
+              targetElement.classList.contains('card-body')) {
+            targetElement.classList.add('collapsible');
+          }
+          
+          // Skip setting initial state for elements that may need to be visible by default
+          if (!button.hasAttribute('data-expanded')) {
+            // Hide by default
+            targetElement.style.display = 'none';
+            
+            // Set initial icon state
+            const icon = button.querySelector('i');
+            if (icon) {
+              icon.classList.remove('fa-chevron-up');
+              icon.classList.add('fa-chevron-down');
+            }
+            
+            // Find parent header if it exists
+            const header = button.closest('.accordion-header, .card-header');
+            if (header) {
+              header.classList.remove('active');
+            }
+          } else {
+            // Show elements marked to be expanded by default
+            targetElement.style.display = 'block';
+            
+            // Update icon state
+            const icon = button.querySelector('i');
+            if (icon) {
+              icon.classList.remove('fa-chevron-down');
+              icon.classList.add('fa-chevron-up');
+            }
+            
+            // Set active state
+            button.classList.add('active');
+            const header = button.closest('.accordion-header, .card-header');
+            if (header) {
+              header.classList.add('active');
+            }
+          }
+        }
+      });
+
+      // Add click event handler
+      document.addEventListener('click', handleToggleClick);
+    }
+
+    // Improved toggle click handler to prevent auto-closing issues
+    function handleToggleClick(event) {
+      // Only handle direct clicks on toggle buttons, not bubbled events
+      if (event.target.closest('.toggle-collapse') && event.currentTarget === document) {
+        const button = event.target.closest('.toggle-collapse');
+        
+        // Skip if this is in the crawler results section which has its own handlers
+        if (button.closest('#crawlerResults')) {
+          return;
+        }
+        
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const targetId = button.getAttribute('data-target');
+        const targetElement = document.getElementById(targetId) || document.querySelector(`#${targetId}`);
+        
+        if (targetElement) {
+          // Simple toggle
+          const isVisible = targetElement.style.display !== 'none';
+          targetElement.style.display = isVisible ? 'none' : 'block';
+          
+          // Toggle icon
+          const icon = button.querySelector('i');
+          if (icon) {
+            icon.classList.toggle('fa-chevron-down');
+            icon.classList.toggle('fa-chevron-up');
+          }
+          
+          // Toggle button active state
+          button.classList.toggle('active');
+          
+          // Toggle header active state if in an accordion
+          const header = button.closest('.accordion-header, .card-header');
+          if (header) {
+            header.classList.toggle('active');
+          }
+        }
+      }
+    }
+
+    // Make sure to call this function after dynamic content is loaded
+    function refreshCollapsibles() {
+      // This can be called after adding new elements to the DOM
+      initializeCollapsibles();
     }
   </script>
 </body>
