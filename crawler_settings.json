@@ -1,0 +1,47 @@
+{
+    "categories": {
+        "NEWS": {
+            "tags": [
+                "ai governance"
+            ],
+            "publishers": {
+                "IAPS": "https://www.iaps.ai",
+                "Technologyreview": "https://www.technologyreview.com",
+                "Wired": "https://www.wired.com",
+                "Politico": "https://www.politico.com",
+                "Theverge": "https://www.theverge.com",
+                "Techcrunch": "https://techcrunch.com",
+                "Aisnakeoil": "https://aisnakeoil.substack.com",
+                "Noemamag": "https://www.noemamag.com",
+                "Vox": "https://www.vox.com",
+                "Jack-Clark": "https://jack-clark.net",
+                "Thegradient": "https://thegradient.pub",
+                "Epochai": "https://epochai.org",
+                "Bigtechnology": "https://bigtechnology.substack.com",
+                "Axios": "https://www.axios.com",
+                "Cnbc": "https://www.cnbc.com",
+                "Aiethicsbrief": "https://aiethicsbrief.com",
+                "Points.Datasociety": "https://points.datasociety.net"
+            }
+        },
+        "POLICY": {
+            "tags": [
+                "ai policy"
+            ],
+            "publishers": {}
+        },
+        "ETHICS": {
+            "tags": [
+                "ai ethics",
+                "ai ethic"
+            ],
+            "publishers": {}
+        },
+        "RESEARCH": {
+            "tags": [
+                "ai research"
+            ],
+            "publishers": {}
+        }
+    }
+}

@@ -448,14 +448,6 @@ def load_crawler_settings():
         # Create default settings file
         default_settings = {
             "categories": {
-                "NEWS": {
-                    "tags": ["ai governance", "ai policy", "artificial intelligence regulation"],
-                    "publishers": {}
-                },
-                "Research": {
-                    "tags": ["ai ethics", "ai governance", "ai policy framework"],
-                    "publishers": {}
-                }
             }
         }
         with open('crawler_settings.json', 'w') as f:
