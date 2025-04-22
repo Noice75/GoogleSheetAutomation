@@ -12,6 +12,9 @@ from fake_useragent import UserAgent
 import time
 import random
 import json
+import threading
+from urllib.parse import urlparse
+from crawler import setup_driver, search, get_base_url
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
@@ -24,6 +27,18 @@ CORS(app)  # Enable CORS for all domains
 # Google Sheets API setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 SERVICE_ACCOUNT_FILE = 'credentials.json'
+
+# Global variables for crawler
+crawler_status = {
+    "running": False,
+    "progress": 0,
+    "total": 0,
+    "current": "",
+    "results": []
+}
+
+# Global file lock to prevent concurrent writes
+file_lock = threading.Lock()
 
 def load_config():
     """Load the sheet ID from config.json, create if it doesn't exist"""
@@ -424,6 +439,573 @@ def update_sheet_id():
         return jsonify({"status": "success", "message": "Sheet ID updated successfully"}), 200
     except Exception as e:
         logger.error(f"Error updating sheet ID: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+# Crawler settings functions
+def load_crawler_settings():
+    """Load crawler settings from crawler_settings.json"""
+    if not os.path.exists('crawler_settings.json'):
+        # Create default settings file
+        default_settings = {
+            "categories": {
+                "NEWS": {
+                    "tags": ["ai governance", "ai policy", "artificial intelligence regulation"],
+                    "publishers": {}
+                },
+                "Research": {
+                    "tags": ["ai ethics", "ai governance", "ai policy framework"],
+                    "publishers": {}
+                }
+            }
+        }
+        with open('crawler_settings.json', 'w') as f:
+            json.dump(default_settings, f, indent=4)
+        return default_settings
+    
+    with open('crawler_settings.json', 'r') as f:
+        settings = json.load(f)
+        
+        # Check if settings needs to be migrated to new format
+        if "categories" not in settings:
+            # Old format, convert to new format
+            new_settings = {"categories": {}}
+            for category, publishers in settings.items():
+                new_settings["categories"][category] = {
+                    "tags": ["ai governance", "ai policy"],  # Default tags
+                    "publishers": publishers
+                }
+            settings = new_settings
+            # Save the migrated settings
+            save_crawler_settings(settings)
+            
+        return settings
+
+def save_crawler_settings(settings):
+    """Save crawler settings to crawler_settings.json"""
+    with open('crawler_settings.json', 'w') as f:
+        json.dump(settings, f, indent=4)
+    return True
+
+def add_publisher(category, publisher_name, url):
+    """Add a new publisher to the crawler settings"""
+    settings = load_crawler_settings()
+    
+    # Convert article URL to base URL if needed
+    base_url = get_base_url(url)
+    
+    # Add the publisher to the specified category
+    if "categories" not in settings:
+        settings["categories"] = {}
+        
+    if category not in settings["categories"]:
+        settings["categories"][category] = {
+            "tags": ["ai governance", "ai policy"],  # Default tags
+            "publishers": {}
+        }
+    
+    settings["categories"][category]["publishers"][publisher_name] = base_url
+    
+    # Save the updated settings
+    save_crawler_settings(settings)
+    return True
+
+def remove_publisher(category, publisher_name):
+    """Remove a publisher from the crawler settings"""
+    settings = load_crawler_settings()
+    
+    if "categories" in settings and category in settings["categories"] and "publishers" in settings["categories"][category]:
+        if publisher_name in settings["categories"][category]["publishers"]:
+            del settings["categories"][category]["publishers"][publisher_name]
+            
+            # Remove empty categories
+            if not settings["categories"][category]["publishers"]:
+                del settings["categories"][category]
+            
+            # Save the updated settings
+            save_crawler_settings(settings)
+            return True
+    
+    return False
+
+def update_category_tags(category, tags):
+    """Update the tags for a category"""
+    settings = load_crawler_settings()
+    
+    if "categories" not in settings:
+        settings["categories"] = {}
+        
+    if category not in settings["categories"]:
+        settings["categories"][category] = {
+            "tags": [],
+            "publishers": {}
+        }
+    
+    settings["categories"][category]["tags"] = tags
+    
+    # Save the updated settings
+    save_crawler_settings(settings)
+    return True
+
+def append_link(link, publisher=None, category=None, file_path="crawled_links.json"):
+    """Append a link to the crawled_links.json file with additional metadata"""
+    # Use lock to prevent concurrent writes
+    with file_lock:
+        # If file doesn't exist, create an empty list and file
+        if not os.path.exists(file_path):
+            with open(file_path, "w") as f:
+                json.dump([], f)
+
+        # Read existing links
+        with open(file_path, "r") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                data = []
+
+        # Check if link is already in the file
+        link_exists = False
+        for item in data:
+            if isinstance(item, dict) and item.get("url") == link:
+                link_exists = True
+                break
+            elif isinstance(item, str) and item == link:
+                # If the item is in the old format (just a string), remove it
+                data.remove(item)
+                link_exists = False
+                break
+
+        # Append if link is not already in the file
+        if not link_exists:
+            # Create a new entry with metadata
+            entry = {
+                "url": link,
+                "timestamp": datetime.now().isoformat(),
+                "publisher": publisher,
+                "category": category
+            }
+            data.append(entry)
+            with open(file_path, "w") as f:
+                json.dump(data, f, indent=4)
+            
+            return True
+        
+        return False
+
+def append_links_batch(links, publisher=None, category=None, file_path="crawled_links.json"):
+    """Append multiple links at once for better performance"""
+    if not links:
+        return 0
+        
+    # Use lock to prevent concurrent writes
+    with file_lock:
+        # If file doesn't exist, create an empty list and file
+        if not os.path.exists(file_path):
+            with open(file_path, "w") as f:
+                json.dump([], f)
+                
+        # Read existing links
+        with open(file_path, "r") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                data = []
+                
+        # Track existing URLs to avoid duplicates
+        existing_urls = {item.get("url") if isinstance(item, dict) else item for item in data}
+                
+        # Process old format items (strings)
+        data = [item for item in data if isinstance(item, dict)]
+                
+        # Add new entries
+        count_added = 0
+        for link in links:
+            if link not in existing_urls:
+                entry = {
+                    "url": link,
+                    "timestamp": datetime.now().isoformat(),
+                    "publisher": publisher,
+                    "category": category
+                }
+                data.append(entry)
+                count_added += 1
+                
+        # Save if any links were added
+        if count_added > 0:
+            with open(file_path, "w") as f:
+                json.dump(data, f, indent=4)
+                
+        return count_added
+
+def run_crawler(categories=None, publishers=None, max_pages=5):
+    """Run the crawler with the specified filters"""
+    global crawler_status
+    
+    # Reset crawler status
+    crawler_status = {
+        "running": True,
+        "progress": 0,
+        "total": 0,
+        "current": "",
+        "results": []
+    }
+    
+    # Load crawler settings
+    settings = load_crawler_settings()
+    
+    # Filter categories if specified
+    if categories:
+        filtered_categories = {}
+        for category in categories:
+            if "categories" in settings and category in settings["categories"]:
+                filtered_categories[category] = settings["categories"][category]
+    else:
+        filtered_categories = settings.get("categories", {})
+    
+    # Calculate total number of publishers to crawl
+    total_publishers = 0
+    
+    # Create a map of publishers to crawl
+    publishers_to_crawl = {}
+    
+    # If publishers are specified, create a map of category -> publisher_name -> True
+    if publishers:
+        for publisher in publishers:
+            category = publisher.get('category')
+            name = publisher.get('name')
+            if category and name:
+                if category not in publishers_to_crawl:
+                    publishers_to_crawl[category] = {}
+                publishers_to_crawl[category][name] = True
+                total_publishers += 1
+    else:
+        # If no publishers specified, crawl all publishers in filtered categories
+        for category, category_data in filtered_categories.items():
+            publishers_dict = category_data.get("publishers", {})
+            publishers_to_crawl[category] = {name: True for name in publishers_dict.keys()}
+            total_publishers += len(publishers_dict)
+    
+    crawler_status["total"] = total_publishers
+    
+    # Initialize the driver
+    driver = setup_driver(headless=True)
+    
+    try:
+        # Iterate through categories and publishers
+        for category, category_data in filtered_categories.items():
+            # Skip if no publishers in this category
+            if not category_data.get("publishers"):
+                continue
+                
+            # Get the tags for this category
+            category_tags = category_data.get("tags", ["ai governance", "ai policy"])
+            
+            # Iterate through publishers in this category
+            for publisher_name, base_url in category_data.get("publishers", {}).items():
+                # Skip if specific publishers are requested and this one isn't included
+                if publishers and (category not in publishers_to_crawl or publisher_name not in publishers_to_crawl[category]):
+                    continue
+                
+                # Update status
+                crawler_status["current"] = f"Crawling {publisher_name} ({category})"
+                
+                try:
+                    # Create search query using category tags
+                    search_parts = [f'"{tag}" site:{base_url.replace("https://", "").replace("http://", "")}' for tag in category_tags]
+                    search_query = " OR ".join(search_parts)
+                    print(search_query)
+                    logger.info(f"Searching with query: {search_query}")
+                    
+                    # Run the search
+                    result_links = search(driver, search_query, max_pages=max_pages)
+                    
+                    # Get the publisher's domain for validation
+                    publisher_domain = base_url.replace("https://", "").replace("http://", "").strip("/")
+                    if publisher_domain.startswith("www."):
+                        publisher_domain = publisher_domain[4:]  # Remove www. prefix if present
+                    
+                    # Process results and append to crawler_status and JSON file immediately
+                    valid_links = []
+                    for link in result_links:
+                        # Check if the result URL contains the publisher's domain
+                        try:
+                            result_domain = link.replace("https://", "").replace("http://", "").split("/")[0]
+                            if result_domain.startswith("www."):
+                                result_domain = result_domain[4:]  # Remove www. prefix if present
+                            
+                            # Only add the result if it's from the publisher's domain
+                            if publisher_domain in result_domain:
+                                # Add to crawler status results
+                                crawler_status["results"].append({
+                                    "url": link,
+                                    "publisher": publisher_name,
+                                    "category": category
+                                })
+                                # Add to batch
+                                valid_links.append(link)
+                            else:
+                                logger.info(f"Skipping {link} - not from {publisher_domain}")
+                        except Exception as e:
+                            logger.error(f"Error validating URL {link}: {str(e)}")
+                    
+                    # Append valid links in batch for better performance
+                    if valid_links:
+                        count_added = append_links_batch(valid_links, publisher_name, category)
+                        logger.info(f"Added {count_added} new links for {publisher_name} ({category})")
+                    
+                    # Log completion of this publisher
+                    logger.info(f"Completed search for {publisher_name} ({category})")
+                    
+                except Exception as publisher_error:
+                    # Log error but continue with next publisher
+                    logger.error(f"Error processing publisher {publisher_name}: {str(publisher_error)}")
+                finally:
+                    # Update progress regardless of success or failure
+                    crawler_status["progress"] += 1
+
+        # Crawler completed successfully
+        crawler_status["running"] = False
+        crawler_status["current"] = "Crawling completed"
+        
+    except Exception as e:
+        logger.error(f"Error running crawler: {str(e)}")
+        crawler_status["running"] = False
+        crawler_status["current"] = f"Error: {str(e)}"
+    
+    finally:
+        # Close the driver
+        driver.quit()
+    
+    return crawler_status
+
+# New routes for crawler functionality
+@app.route('/crawler-settings', methods=['GET'])
+def get_crawler_settings():
+    """Get the current crawler settings"""
+    try:
+        settings = load_crawler_settings()
+        return jsonify({"status": "success", "settings": settings}), 200
+    except Exception as e:
+        logger.error(f"Error getting crawler settings: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/crawler-settings', methods=['POST'])
+def update_crawler_settings():
+    """Add or update a publisher in the crawler settings"""
+    try:
+        data = request.json
+        category = data.get('category')
+        publisher_name = data.get('publisher_name')
+        url = data.get('url')
+        
+        if not category or not publisher_name or not url:
+            return jsonify({"status": "error", "error": "Category, publisher name, and URL are required"}), 400
+        
+        # Add the publisher
+        add_publisher(category, publisher_name, url)
+        
+        return jsonify({"status": "success", "message": "Publisher added successfully"}), 200
+    except Exception as e:
+        logger.error(f"Error updating crawler settings: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/crawler-settings/<category>/<publisher>', methods=['DELETE'])
+def delete_publisher(category, publisher):
+    """Remove a publisher from the crawler settings"""
+    try:
+        if remove_publisher(category, publisher):
+            return jsonify({"status": "success", "message": "Publisher removed successfully"}), 200
+        else:
+            return jsonify({"status": "error", "error": "Publisher not found"}), 404
+    except Exception as e:
+        logger.error(f"Error removing publisher: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/crawler/start', methods=['POST'])
+def start_crawler():
+    """Start the crawler with specified filters"""
+    data = request.get_json()
+    categories = data.get('categories', [])
+    publishers = data.get('publishers', [])
+    max_pages = data.get('max_pages', 5)
+    
+    # Start crawler in a separate thread
+    thread = threading.Thread(target=run_crawler, args=(categories, publishers, max_pages))
+    thread.daemon = True
+    thread.start()
+    
+    return jsonify({"status": "started"})
+
+@app.route('/crawler/status', methods=['GET'])
+def get_crawler_status():
+    """Get the current status of the crawler"""
+    return jsonify({"status": "success", "crawler": crawler_status}), 200
+
+@app.route('/crawler/results', methods=['GET'])
+def get_crawler_results():
+    """Get the results of the crawler"""
+    return jsonify({"status": "success", "results": crawler_status["results"]}), 200
+
+@app.route('/crawler/links', methods=['GET'])
+def get_crawled_links():
+    """Get all crawled links with their metadata"""
+    try:
+        file_path = "crawled_links.json"
+        if not os.path.exists(file_path):
+            return jsonify({"status": "success", "links": []}), 200
+            
+        with open(file_path, "r") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                data = []
+        
+        # Convert old format (list of strings) to new format (list of objects)
+        formatted_data = []
+        for item in data:
+            if isinstance(item, str):
+                formatted_data.append({
+                    "url": item,
+                    "timestamp": None,
+                    "publisher": None,
+                    "category": None
+                })
+            else:
+                formatted_data.append(item)
+                
+        return jsonify({"status": "success", "links": formatted_data}), 200
+    except Exception as e:
+        logger.error(f"Error getting crawled links: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/crawler-settings/tags/<category>', methods=['PUT'])
+def update_tags(category):
+    """Update the tags for a category"""
+    try:
+        data = request.json
+        tags = data.get('tags', [])
+        
+        if not category:
+            return jsonify({"status": "error", "error": "Category is required"}), 400
+        
+        if not isinstance(tags, list):
+            return jsonify({"status": "error", "error": "Tags must be a list of strings"}), 400
+        
+        # Update the tags
+        update_category_tags(category, tags)
+        
+        return jsonify({"status": "success", "message": f"Tags for category '{category}' updated successfully"}), 200
+    except Exception as e:
+        logger.error(f"Error updating tags: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/crawler-settings/tags/<category>', methods=['GET'])
+def get_category_tags(category):
+    """Get the tags for a category"""
+    try:
+        settings = load_crawler_settings()
+        
+        if "categories" not in settings or category not in settings["categories"]:
+            return jsonify({"status": "error", "error": f"Category '{category}' not found"}), 404
+        
+        tags = settings["categories"][category].get("tags", [])
+        
+        return jsonify({"status": "success", "tags": tags}), 200
+    except Exception as e:
+        logger.error(f"Error getting tags: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/crawler/links/publisher/<publisher>', methods=['GET'])
+def get_links_by_publisher(publisher):
+    """Get crawled links for a specific publisher"""
+    try:
+        file_path = "crawled_links.json"
+        if not os.path.exists(file_path):
+            return jsonify({"status": "success", "links": []}), 200
+            
+        with open(file_path, "r") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                data = []
+        
+        # Filter links by publisher
+        publisher_links = []
+        for item in data:
+            if isinstance(item, dict) and item.get("publisher") == publisher:
+                publisher_links.append(item)
+                
+        return jsonify({"status": "success", "publisher": publisher, "links": publisher_links}), 200
+    except Exception as e:
+        logger.error(f"Error getting links for publisher {publisher}: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/crawler/links/category/<category>', methods=['GET'])
+def get_links_by_category(category):
+    """Get crawled links for a specific category"""
+    try:
+        file_path = "crawled_links.json"
+        if not os.path.exists(file_path):
+            return jsonify({"status": "success", "links": []}), 200
+            
+        with open(file_path, "r") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                data = []
+        
+        # Filter links by category
+        category_links = []
+        for item in data:
+            if isinstance(item, dict) and item.get("category") == category:
+                category_links.append(item)
+                
+        return jsonify({"status": "success", "category": category, "links": category_links}), 200
+    except Exception as e:
+        logger.error(f"Error getting links for category {category}: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/crawler/links/stats', methods=['GET'])
+def get_link_stats():
+    """Get statistics about crawled links"""
+    try:
+        file_path = "crawled_links.json"
+        if not os.path.exists(file_path):
+            return jsonify({"status": "success", "stats": {"total": 0}}), 200
+            
+        with open(file_path, "r") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                data = []
+        
+        # Calculate statistics
+        total_links = len(data)
+        publishers = {}
+        categories = {}
+        
+        for item in data:
+            if isinstance(item, dict):
+                publisher = item.get("publisher")
+                category = item.get("category")
+                
+                if publisher:
+                    publishers[publisher] = publishers.get(publisher, 0) + 1
+                if category:
+                    categories[category] = categories.get(category, 0) + 1
+        
+        # Sort by count
+        publishers = dict(sorted(publishers.items(), key=lambda x: x[1], reverse=True))
+        categories = dict(sorted(categories.items(), key=lambda x: x[1], reverse=True))
+        
+        stats = {
+            "total": total_links,
+            "by_publisher": publishers,
+            "by_category": categories
+        }
+                
+        return jsonify({"status": "success", "stats": stats}), 200
+    except Exception as e:
+        logger.error(f"Error getting link statistics: {str(e)}")
         return jsonify({"status": "error", "error": str(e)}), 500
 
 if __name__ == "__main__":

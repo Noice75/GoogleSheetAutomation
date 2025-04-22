@@ -4,19 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Governance Resource Manager</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     :root {
+      --background: #f8f9fa;
+      --card-bg: rgba(255, 255, 255, 0.7);
+      --text-primary: #1a1a1a;
+      --text-secondary: #666666;
+      --border: rgba(0, 0, 0, 0.1);
       --primary: #10a37f;
       --primary-dark: #0d8c6d;
       --primary-light: rgba(16, 163, 127, 0.1);
+      --danger: #dc3545;
       --success: #10a37f;
       --success-dark: #0d8c6d;
-      --danger: #ef4444;
       --warning: #f59e0b;
       --light: #ffffff;
       --dark: #1a1a1a;
       --gray: #666666;
-      --border: rgba(255, 255, 255, 0.1);
       --background: #f7f7f7;
       --card-bg: rgba(255, 255, 255, 0.7);
       --text-primary: #1a1a1a;
@@ -1319,6 +1324,503 @@
       position: relative;
       z-index: 0;
     }
+
+    /* Crawler styles */
+    .publishers-list {
+      margin-top: 1rem;
+    }
+
+    .publisher-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background-color: rgba(255, 255, 255, 0.6);
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      transition: all 0.2s ease;
+    }
+
+    .publisher-item:hover {
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .publisher-info {
+      flex: 1;
+    }
+
+    .publisher-name {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .publisher-category {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .publisher-url {
+      font-size: 0.875rem;
+      color: var(--primary);
+      word-break: break-all;
+    }
+
+    .publisher-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .crawler-results {
+      margin-top: 1rem;
+    }
+
+    .result-item {
+      padding: 1rem;
+      background-color: rgba(255, 255, 255, 0.6);
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      transition: all 0.2s ease;
+    }
+
+    .result-item:hover {
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .result-url {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      word-break: break-all;
+    }
+
+    .result-meta {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .progress-container {
+      margin-top: 1rem;
+      background-color: rgba(255, 255, 255, 0.6);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 0.5rem;
+      background-color: var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    /* Table styles for crawled links */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5rem;
+      background-color: rgba(255, 255, 255, 0.6);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .table th,
+    .table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table th {
+      background-color: rgba(16, 163, 127, 0.1);
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table tbody tr:hover {
+      background-color: rgba(16, 163, 127, 0.05);
+    }
+
+    .table a {
+      color: var(--primary);
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .table a:hover {
+      text-decoration: underline;
+    }
+
+    [data-theme="dark"] .table {
+      background-color: rgba(30, 30, 30, 0.6);
+    }
+
+    [data-theme="dark"] .table th {
+      background-color: rgba(16, 163, 127, 0.2);
+    }
+
+    [data-theme="dark"] .table tbody tr:hover {
+      background-color: rgba(16, 163, 127, 0.1);
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    [data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    [data-theme="dark"] .publisher-item,
+    [data-theme="dark"] .result-item {
+      background-color: rgba(30, 30, 30, 0.6);
+    }
+
+    [data-theme="dark"] .publisher-item:hover,
+    [data-theme="dark"] .result-item:hover {
+      background-color: rgba(30, 30, 30, 0.8);
+    }
+
+    [data-theme="dark"] .progress-container {
+      background-color: rgba(30, 30, 30, 0.6);
+    }
+
+    .category-container {
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+    
+    .category-header {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+    
+    .checkbox-item {
+      margin: 0.5rem 0;
+      padding-left: 1rem;
+    }
+
+    /* Tag styles */
+    .tags-container {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .tags-display {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 40px;
+      padding: 8px;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.6);
+      border: 1px solid var(--border);
+    }
+
+    [data-theme="dark"] .tags-display {
+      background-color: rgba(30, 30, 30, 0.6);
+    }
+    
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      border-radius: 16px;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      cursor: default;
+    }
+    
+    .tag:hover {
+      background-color: rgba(16, 163, 127, 0.2);
+      transform: translateY(-1px);
+    }
+    
+    .tag .remove-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.5);
+      color: var(--primary);
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .tag .remove-tag:hover {
+      background-color: rgba(255, 255, 255, 0.9);
+      color: var(--danger);
+    }
+
+    [data-theme="dark"] .tag {
+      background-color: rgba(16, 163, 127, 0.3);
+      color: #34d399;
+    }
+
+    [data-theme="dark"] .tag .remove-tag {
+      background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="dark"] .tag .remove-tag:hover {
+      background-color: rgba(0, 0, 0, 0.6);
+    }
+    
+    .tag-input-container {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .tag-input-container input {
+      flex: 1;
+    }
+    
+    .tag-hint {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+    
+    /* Better publisher list */
+    .publishers-list {
+      margin-top: 1rem;
+      max-height: 500px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background-color: rgba(255, 255, 255, 0.6);
+    }
+
+    [data-theme="dark"] .publishers-list {
+      background-color: rgba(30, 30, 30, 0.6);
+    }
+    
+    .publisher-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background-color: transparent;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .publisher-item:last-child {
+      border-bottom: none;
+    }
+    
+    .publisher-info {
+      flex: 1;
+    }
+    
+    .publisher-name {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      color: var(--text-primary);
+    }
+    
+    .publisher-category {
+      font-size: 0.875rem;
+      color: var(--primary);
+      display: inline-block;
+      padding: 2px 8px;
+      background-color: var(--primary-light);
+      border-radius: 12px;
+      margin-bottom: 4px;
+    }
+
+    [data-theme="dark"] .publisher-category {
+      background-color: rgba(16, 163, 127, 0.3);
+    }
+    
+    .publisher-url {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      word-break: break-all;
+    }
+    
+    /* Improved category container */
+    .category-container {
+      margin-bottom: 1rem;
+      padding: 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.6);
+      transition: all 0.2s ease;
+    }
+
+    [data-theme="dark"] .category-container {
+      background-color: rgba(30, 30, 30, 0.6);
+    }
+    
+    .category-container:hover {
+      background-color: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="dark"] .category-container:hover {
+      background-color: rgba(30, 30, 30, 0.8);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .category-header {
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .category-header .tag-count {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: normal;
+    }
+
+    [data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Result actions and filter controls */
+    .result-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .filter-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .filter-controls select {
+      flex: 1;
+      min-width: 150px;
+    }
+    
+    /* Statistics styles */
+    .crawler-stats {
+      padding: 20px;
+    }
+    
+    .stats-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    
+    .stat-card {
+      flex: 1;
+      min-width: 200px;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    [data-theme="dark"] .stat-card {
+      background-color: rgba(30, 30, 30, 0.8);
+    }
+    
+    .stat-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .stat-count {
+      background-color: var(--primary);
+      color: white;
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.8rem;
+    }
+    
+    .stat-list {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+    
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .stat-item:last-child {
+      border-bottom: none;
+    }
+    
+    .stat-item-name {
+      font-weight: 500;
+    }
+    
+    .stat-item-value {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    
+    .stat-summary {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-align: center;
+      margin: 10px 0 20px;
+    }
+    
+    .btn-info {
+      background-color: #17a2b8;
+      color: white;
+    }
+    
+    .btn-info:hover:not(:disabled) {
+      background-color: #138496;
+      box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
@@ -1349,6 +1851,7 @@
     <div class="tab-container">
       <div class="tab active" data-tab="add-resource">Add Resource</div>
       <div class="tab" data-tab="manage-worksheets">Manage Worksheets</div>
+      <div class="tab" data-tab="crawler">Crawler</div>
     </div>
     
     <div id="add-resource" class="tab-content active">
@@ -1429,6 +1932,132 @@
       </div>
     </div>
 
+    <div id="crawler" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2>Manage Crawler Settings</h2>
+        </div>
+        <div class="form-group">
+          <label for="crawlerCategory">Category</label>
+          <select id="crawlerCategory" class="form-control">
+            <option value="">Loading worksheets...</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Category Tags <span class="tag-hint">(used in search queries)</span></label>
+          <div class="tags-container">
+            <div id="tagsDisplay" class="tags-display">
+              <div class="text-center">
+                <p>Select a category to manage tags</p>
+              </div>
+            </div>
+            <div class="tag-input-container">
+              <input type="text" id="newTag" class="form-control" placeholder="Add new tag">
+              <button type="button" id="addTagBtn" class="btn btn-sm btn-primary">Add Tag</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="publisherName">Publisher Name</label>
+          <input type="text" id="publisherName" class="form-control" placeholder="Enter publisher name">
+        </div>
+        <div class="form-group">
+          <label for="publisherUrl">Publisher URL</label>
+          <input type="url" id="publisherUrl" class="form-control" placeholder="https://example.com">
+        </div>
+        <button type="button" id="addPublisherBtn" class="btn btn-primary">Add Publisher</button>
+        <div id="publisherStatus" class="hidden"></div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-header">
+          <h2>Current Publishers</h2>
+        </div>
+        <div id="publishersList" class="publishers-list">
+          <div class="text-center">
+            <p>Loading publishers...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-header">
+          <h2>Run Crawler</h2>
+        </div>
+        <div class="form-group">
+          <label>Categories to Crawl</label>
+          <div id="categoryCheckboxes" class="checkbox-group">
+            <div class="text-center">
+              <p>Loading worksheets...</p>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Publishers to Crawl</label>
+          <div id="publisherCheckboxes" class="checkbox-group">
+            <div class="text-center">
+              <p>Select categories first</p>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="maxPages">Maximum Pages to Crawl</label>
+          <input type="number" id="maxPages" class="form-control" value="5" min="1" max="20">
+        </div>
+        <button type="button" id="startCrawlerBtn" class="btn btn-success">Start Crawler</button>
+        <div id="crawlerStatus" class="hidden"></div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-header">
+          <h2>Crawler Results</h2>
+          <div class="result-actions">
+            <button type="button" id="viewAllLinksBtn" class="btn btn-primary">View All Links</button>
+            <button type="button" id="viewStatsBtn" class="btn btn-info">View Statistics</button>
+          </div>
+        </div>
+        <div id="crawlerResults" class="crawler-results">
+          <div class="text-center">
+            <p>No results yet. Start the crawler to see results.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card mt-4" id="allLinksCard" style="display: none;">
+        <div class="card-header">
+          <h2>All Crawled Links</h2>
+          <div class="filter-controls">
+            <select id="publisherFilter" class="form-control">
+              <option value="">All Publishers</option>
+            </select>
+            <select id="categoryFilter" class="form-control">
+              <option value="">All Categories</option>
+            </select>
+            <button type="button" id="applyFiltersBtn" class="btn btn-primary">Apply Filters</button>
+            <button type="button" id="resetFiltersBtn" class="btn btn-secondary">Reset</button>
+          </div>
+        </div>
+        <div id="allCrawledLinks" class="crawler-results">
+          <div class="text-center">
+            <p>Loading crawled links...</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card mt-4" id="statsCard" style="display: none;">
+        <div class="card-header">
+          <h2>Crawler Statistics</h2>
+        </div>
+        <div id="crawlerStats" class="crawler-stats">
+          <div class="text-center">
+            <p>Loading statistics...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="modal" id="confirmModal">
       <div class="modal-content">
         <div class="modal-header">
@@ -1496,8 +2125,18 @@
     // Function to show status message
     function showStatus(elementId, message, type) {
       const statusElement = document.getElementById(elementId);
+      
+      // Special handling for crawler status with the new UI
+      if (elementId === 'crawlerStatus' && type === 'loading' && message.startsWith('Crawling:')) {
+        // Don't use the standard status display for crawler when polling updates it
+        return;
+      }
+      
       statusElement.textContent = message;
       statusElement.className = `status status-${type}`;
+      
+      // Add fade-in animation
+      statusElement.classList.add('fade-in');
       
       // Auto-hide success messages after 5 seconds
       if (type === 'success') {
@@ -1607,7 +2246,10 @@
     });
     
     // Refresh worksheets button
-    document.getElementById("refreshWorksheetsBtn").addEventListener("click", fetchWorksheets);
+    document.getElementById("refreshWorksheetsBtn").addEventListener("click", () => {
+      fetchWorksheets();
+      loadCrawlerCategories();
+    });
     
     // Create new worksheet
     document.getElementById("createWorksheetBtn").addEventListener("click", async () => {
@@ -1803,6 +2445,1072 @@
         }
       } catch (error) {
         showStatus('sheetIdStatus', `Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Load crawler categories from worksheets
+    async function loadCrawlerCategories() {
+      const crawlerCategory = document.getElementById('crawlerCategory');
+      const categoryCheckboxes = document.getElementById('categoryCheckboxes');
+      
+      try {
+        showStatus('publisherStatus', 'Loading worksheets...', 'loading');
+        
+        const response = await fetch('/get-worksheets');
+        const data = await response.json();
+        
+        if (data.status === 'error') {
+          showStatus('publisherStatus', data.error, 'error');
+          return;
+        }
+        
+        if (data.worksheets && data.worksheets.length > 0) {
+          // Update dropdown
+          crawlerCategory.innerHTML = '';
+          
+          // Add placeholder option
+          const placeholderOption = document.createElement('option');
+          placeholderOption.value = '';
+          placeholderOption.textContent = 'Select a worksheet';
+          crawlerCategory.appendChild(placeholderOption);
+          
+          // Add worksheet options
+          data.worksheets.forEach(worksheetName => {
+            const option = document.createElement('option');
+            option.value = worksheetName;
+            option.textContent = worksheetName;
+            crawlerCategory.appendChild(option);
+          });
+          
+          // Update checkboxes
+          categoryCheckboxes.innerHTML = '';
+          data.worksheets.forEach(worksheetName => {
+            const checkboxItem = document.createElement('div');
+            checkboxItem.className = 'checkbox-item';
+            
+            checkboxItem.innerHTML = `
+              <input type="checkbox" id="category${worksheetName}" value="${worksheetName}" checked>
+              <label for="category${worksheetName}">${worksheetName}</label>
+            `;
+            
+            categoryCheckboxes.appendChild(checkboxItem);
+          });
+          
+          // Add event listeners to the new checkboxes
+          document.querySelectorAll('#categoryCheckboxes input').forEach(checkbox => {
+            checkbox.addEventListener('change', updatePublisherCheckboxes);
+          });
+          
+          // Update publisher checkboxes after loading categories
+          updatePublisherCheckboxes();
+          
+          document.getElementById('publisherStatus').className = 'hidden';
+        } else {
+          showStatus('publisherStatus', 'No worksheets found. Please set a valid Sheet ID and create a worksheet.', 'error');
+        }
+      } catch (error) {
+        showStatus('publisherStatus', `Error loading worksheets: ${error.message}`, 'error');
+      }
+    }
+
+    // Crawler functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load worksheets for crawler categories
+      loadCrawlerCategories();
+      
+      // Load publishers
+      loadPublishers();
+      
+      // Add publisher button
+      document.getElementById('addPublisherBtn').addEventListener('click', addPublisher);
+      
+      // Start crawler button
+      document.getElementById('startCrawlerBtn').addEventListener('click', startCrawler);
+      
+      // Category checkboxes
+      document.querySelectorAll('#categoryCheckboxes input').forEach(checkbox => {
+        checkbox.addEventListener('change', updatePublisherCheckboxes);
+      });
+      
+      // Initial update of publisher checkboxes
+      updatePublisherCheckboxes();
+      
+      // Start polling for crawler status
+      setInterval(pollCrawlerStatus, 2000);
+      
+      // Category dropdown change event
+      document.getElementById('crawlerCategory').addEventListener('change', loadCategoryTags);
+      
+      // Add tag button
+      document.getElementById('addTagBtn').addEventListener('click', addNewTag);
+      
+      // New tag input enter key event
+      document.getElementById('newTag').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addNewTag();
+        }
+      });
+    });
+
+    // Load tags for a category
+    async function loadCategoryTags() {
+      const category = document.getElementById('crawlerCategory').value;
+      const tagsDisplay = document.getElementById('tagsDisplay');
+      
+      if (!category) {
+        tagsDisplay.innerHTML = '<div class="text-center"><p>Select a category to manage tags</p></div>';
+        return;
+      }
+      
+      try {
+        const response = await fetch('/crawler-settings');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          const settings = data.settings;
+          const categoryData = settings.categories && settings.categories[category];
+          const tags = categoryData ? categoryData.tags || [] : [];
+          
+          displayTags(tags);
+        } else {
+          tagsDisplay.innerHTML = '<div class="text-center"><p>Error loading tags</p></div>';
+        }
+      } catch (error) {
+        tagsDisplay.innerHTML = '<div class="text-center"><p>Error loading tags</p></div>';
+      }
+    }
+    
+    // Display tags in the UI
+    function displayTags(tags) {
+      const tagsDisplay = document.getElementById('tagsDisplay');
+      tagsDisplay.innerHTML = '';
+      
+      if (!tags || tags.length === 0) {
+        tagsDisplay.innerHTML = '<div class="text-center"><p>No tags added yet. Add tags to improve search results.</p></div>';
+        return;
+      }
+      
+      tags.forEach(tag => {
+        const tagElement = document.createElement('div');
+        tagElement.className = 'tag';
+        tagElement.innerHTML = `
+          ${tag}
+          <span class="remove-tag" data-tag="${tag}">&times;</span>
+        `;
+        tagsDisplay.appendChild(tagElement);
+      });
+      
+      // Add event listeners to remove tag buttons
+      document.querySelectorAll('.remove-tag').forEach(button => {
+        button.addEventListener('click', function() {
+          removeTag(this.getAttribute('data-tag'));
+        });
+      });
+    }
+    
+    // Add a new tag
+    async function addNewTag() {
+      const category = document.getElementById('crawlerCategory').value;
+      const newTagInput = document.getElementById('newTag');
+      const tag = newTagInput.value.trim();
+      
+      if (!category) {
+        showStatus('publisherStatus', 'Please select a category first', 'error');
+        return;
+      }
+      
+      if (!tag) {
+        showStatus('publisherStatus', 'Please enter a tag', 'error');
+        return;
+      }
+      
+      try {
+        // Get current tags
+        const response = await fetch(`/crawler-settings`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          const settings = data.settings;
+          const categoryData = settings.categories && settings.categories[category];
+          const currentTags = categoryData ? categoryData.tags || [] : [];
+          
+          // Check if tag already exists
+          if (currentTags.includes(tag)) {
+            showStatus('publisherStatus', 'Tag already exists', 'error');
+            return;
+          }
+          
+          // Add the new tag
+          const newTags = [...currentTags, tag];
+          
+          // Update tags
+          const updateResponse = await fetch(`/crawler-settings/tags/${category}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ tags: newTags })
+          });
+          
+          const updateResult = await updateResponse.json();
+          
+          if (updateResult.status === 'success') {
+            showStatus('publisherStatus', 'Tag added successfully!', 'success');
+            newTagInput.value = '';
+            displayTags(newTags);
+          } else {
+            showStatus('publisherStatus', `Error: ${updateResult.error}`, 'error');
+          }
+        }
+      } catch (error) {
+        showStatus('publisherStatus', `Error: ${error.message}`, 'error');
+      }
+    }
+    
+    // Remove a tag
+    async function removeTag(tag) {
+      const category = document.getElementById('crawlerCategory').value;
+      
+      if (!category) {
+        showStatus('publisherStatus', 'Please select a category first', 'error');
+        return;
+      }
+      
+      try {
+        // Get current tags
+        const response = await fetch(`/crawler-settings`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          const settings = data.settings;
+          const categoryData = settings.categories && settings.categories[category];
+          const currentTags = categoryData ? categoryData.tags || [] : [];
+          
+          // Remove the tag
+          const newTags = currentTags.filter(t => t !== tag);
+          
+          // Update tags
+          const updateResponse = await fetch(`/crawler-settings/tags/${category}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ tags: newTags })
+          });
+          
+          const updateResult = await updateResponse.json();
+          
+          if (updateResult.status === 'success') {
+            showStatus('publisherStatus', 'Tag removed successfully!', 'success');
+            displayTags(newTags);
+          } else {
+            showStatus('publisherStatus', `Error: ${updateResult.error}`, 'error');
+          }
+        }
+      } catch (error) {
+        showStatus('publisherStatus', `Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Load publishers from the server
+    async function loadPublishers() {
+      try {
+        const response = await fetch('/crawler-settings');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          displayPublishers(data.settings);
+          updatePublisherCheckboxes();
+        } else {
+          showStatus('publisherStatus', `Error: ${data.error}`, 'error');
+        }
+      } catch (error) {
+        showStatus('publisherStatus', `Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Display publishers in the UI
+    function displayPublishers(settings) {
+      const publishersList = document.getElementById('publishersList');
+      publishersList.innerHTML = '';
+      
+      if (!settings || !settings.categories || Object.keys(settings.categories).length === 0) {
+        publishersList.innerHTML = '<div class="text-center"><p>No publishers added yet.</p></div>';
+        return;
+      }
+      
+      let hasPublishers = false;
+      
+      for (const [category, categoryData] of Object.entries(settings.categories)) {
+        const publishers = categoryData.publishers || {};
+        for (const [publisherName, url] of Object.entries(publishers)) {
+          hasPublishers = true;
+          const publisherItem = document.createElement('div');
+          publisherItem.className = 'publisher-item';
+          
+          publisherItem.innerHTML = `
+            <div class="publisher-info">
+              <div class="publisher-name">${publisherName}</div>
+              <div class="publisher-category">${category}</div>
+              <div class="publisher-url">${url}</div>
+            </div>
+            <div class="publisher-actions">
+              <button class="btn btn-sm btn-danger" onclick="deletePublisher('${category}', '${publisherName}')">Delete</button>
+            </div>
+          `;
+          
+          publishersList.appendChild(publisherItem);
+        }
+      }
+      
+      if (!hasPublishers) {
+        publishersList.innerHTML = '<div class="text-center"><p>No publishers added yet.</p></div>';
+      }
+    }
+
+    // Update publisher checkboxes based on selected categories
+    async function updatePublisherCheckboxes() {
+      const selectedCategories = Array.from(document.querySelectorAll('#categoryCheckboxes input:checked')).map(cb => cb.value);
+      const publisherCheckboxes = document.getElementById('publisherCheckboxes');
+      
+      if (selectedCategories.length === 0) {
+        publisherCheckboxes.innerHTML = '<div class="text-center"><p>Select at least one category</p></div>';
+        return;
+      }
+      
+      try {
+        const response = await fetch('/crawler-settings');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          const settings = data.settings;
+          
+          // Filter publishers by selected categories
+          const filteredPublishers = {};
+          for (const category of selectedCategories) {
+            if (settings.categories && settings.categories[category] && settings.categories[category].publishers) {
+              filteredPublishers[category] = settings.categories[category].publishers;
+            }
+          }
+          
+          // Display publisher checkboxes
+          publisherCheckboxes.innerHTML = '';
+          
+          if (Object.keys(filteredPublishers).length === 0) {
+            publisherCheckboxes.innerHTML = '<div class="text-center"><p>No publishers in selected categories</p></div>';
+            return;
+          }
+          
+          // Create a container for each category
+          for (const [category, publishers] of Object.entries(filteredPublishers)) {
+            if (Object.keys(publishers).length === 0) continue;
+            
+            const categoryContainer = document.createElement('div');
+            categoryContainer.className = 'category-container';
+            
+            // Add category header with tag count
+            const categoryHeader = document.createElement('div');
+            categoryHeader.className = 'category-header';
+            
+            const tags = settings.categories[category].tags || [];
+            const tagCount = tags.length > 0 ? `<span class="tag-count">${tags.length} search tags</span>` : '';
+            
+            categoryHeader.innerHTML = `
+              <span>${category}</span>
+              ${tagCount}
+            `;
+            categoryContainer.appendChild(categoryHeader);
+            
+            // Add publishers for this category
+            for (const [publisherName, url] of Object.entries(publishers)) {
+              const checkboxItem = document.createElement('div');
+              checkboxItem.className = 'checkbox-item';
+              
+              checkboxItem.innerHTML = `
+                <input type="checkbox" id="publisher_${category}_${publisherName}" 
+                       value="${publisherName}" 
+                       data-category="${category}"
+                       checked>
+                <label for="publisher_${category}_${publisherName}">${publisherName}</label>
+              `;
+              
+              categoryContainer.appendChild(checkboxItem);
+            }
+            
+            publisherCheckboxes.appendChild(categoryContainer);
+          }
+        } else {
+          publisherCheckboxes.innerHTML = '<div class="text-center"><p>Error loading publishers</p></div>';
+        }
+      } catch (error) {
+        publisherCheckboxes.innerHTML = '<div class="text-center"><p>Error loading publishers</p></div>';
+      }
+    }
+
+    // Start the crawler
+    async function startCrawler() {
+      const selectedCategories = Array.from(document.querySelectorAll('#categoryCheckboxes input:checked')).map(cb => cb.value);
+      
+      // Get selected publishers with their categories
+      const selectedPublishers = [];
+      document.querySelectorAll('#publisherCheckboxes input:checked').forEach(checkbox => {
+        const publisherName = checkbox.value;
+        const category = checkbox.getAttribute('data-category');
+        selectedPublishers.push({
+          name: publisherName,
+          category: category
+        });
+      });
+      
+      const maxPages = parseInt(document.getElementById('maxPages').value);
+      
+      if (selectedCategories.length === 0) {
+        showStatus('crawlerStatus', 'Please select at least one category to crawl', 'error');
+        return;
+      }
+      
+      if (selectedPublishers.length === 0) {
+        showStatus('crawlerStatus', 'Please select at least one publisher to crawl', 'error');
+        return;
+      }
+      
+      try {
+        // Initialize the enhanced UI
+        const statusElement = document.getElementById('crawlerStatus');
+        
+        // Clear any existing status
+        statusElement.className = '';
+        statusElement.textContent = '';
+        
+        // Create or update the status container
+        let statusContainer = document.querySelector('.crawler-status-container');
+        if (!statusContainer) {
+          statusContainer = document.createElement('div');
+          statusContainer.className = 'crawler-status-container fade-in';
+          statusElement.appendChild(statusContainer);
+        }
+        
+        // Clear previous content and create fresh UI
+        statusContainer.innerHTML = '';
+        
+        // Status header with badge
+        const statusHeader = document.createElement('div');
+        statusHeader.className = 'status-header';
+        
+        const statusTitle = document.createElement('div');
+        statusTitle.className = 'status-title';
+        statusTitle.innerHTML = '<div class="icon-spin"></div> Crawler Status';
+        
+        const statusBadge = document.createElement('div');
+        statusBadge.className = 'status-badge running';
+        statusBadge.textContent = 'Starting...';
+        
+        statusHeader.appendChild(statusTitle);
+        statusHeader.appendChild(statusBadge);
+        statusContainer.appendChild(statusHeader);
+        
+        // Initial progress bar
+        const progressDetails = document.createElement('div');
+        progressDetails.className = 'progress-details';
+        progressDetails.innerHTML = `
+          <span>Preparing crawler...</span>
+          <span>Starting search process</span>
+        `;
+        statusContainer.appendChild(progressDetails);
+        
+        const progressContainer = document.createElement('div');
+        progressContainer.className = 'progress-container';
+        
+        const progressBar = document.createElement('div');
+        progressBar.className = 'progress-bar';
+        progressBar.style.width = '0%';
+        
+        progressContainer.appendChild(progressBar);
+        statusContainer.appendChild(progressContainer);
+        
+        // Stats
+        const progressStats = document.createElement('div');
+        progressStats.className = 'progress-stats';
+        
+        progressStats.innerHTML = `
+          <div class="progress-stat">
+            <div class="stat-value">${selectedPublishers.length}</div>
+            <div class="stat-label">Selected</div>
+          </div>
+          <div class="progress-stat">
+            <div class="stat-value">0</div>
+            <div class="stat-label">Processed</div>
+          </div>
+          <div class="progress-stat">
+            <div class="stat-value">0</div>
+            <div class="stat-label">Results</div>
+          </div>
+        `;
+        
+        statusContainer.appendChild(progressStats);
+        
+        // Send the request to start the crawler
+        const response = await fetch('/crawler/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            categories: selectedCategories,
+            publishers: selectedPublishers,
+            max_pages: maxPages
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.status !== 'started') {
+          // Show error only if starting failed
+          showStatus('crawlerStatus', `Error: ${data.error || 'Failed to start crawler'}`, 'error');
+        }
+        
+        // Clear results area
+        document.getElementById('crawlerResults').innerHTML = '<div class="text-center"><p>Crawling in progress...</p></div>';
+      } catch (error) {
+        showStatus('crawlerStatus', `Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Poll for crawler status
+    async function pollCrawlerStatus() {
+      try {
+        const response = await fetch('/crawler/status');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          const crawler = data.crawler;
+          const statusElement = document.getElementById('crawlerStatus');
+          
+          // Create or update the status container
+          let statusContainer = document.querySelector('.crawler-status-container');
+          if (!statusContainer) {
+            statusContainer = document.createElement('div');
+            statusContainer.className = 'crawler-status-container fade-in';
+            statusElement.appendChild(statusContainer);
+          }
+          
+          // Clear previous content and create fresh UI
+          statusContainer.innerHTML = '';
+          
+          // Status header with badge
+          const statusHeader = document.createElement('div');
+          statusHeader.className = 'status-header';
+          
+          const statusTitle = document.createElement('div');
+          statusTitle.className = 'status-title';
+          
+          let statusBadge = document.createElement('div');
+          let statusIcon = '';
+          let badgeClass = '';
+          
+          if (crawler.running) {
+            statusIcon = '<div class="icon-spin"></div>';
+            badgeClass = 'running';
+            statusTitle.innerHTML = `${statusIcon} Crawler Status`;
+            statusBadge.innerHTML = 'Running';
+          } else if (crawler.current === "Crawling completed") {
+            statusIcon = '<i class="fas fa-check-circle"></i>';
+            badgeClass = 'completed';
+            statusTitle.innerHTML = 'Crawler Status';
+            statusBadge.innerHTML = 'Completed';
+          } else if (crawler.current && crawler.current.startsWith("Error:")) {
+            statusIcon = '<i class="fas fa-exclamation-triangle"></i>';
+            badgeClass = 'error';
+            statusTitle.innerHTML = 'Crawler Status';
+            statusBadge.innerHTML = 'Error';
+          } else {
+            statusIcon = '<i class="fas fa-circle"></i>';
+            badgeClass = 'idle';
+            statusTitle.innerHTML = 'Crawler Status';
+            statusBadge.innerHTML = 'Idle';
+          }
+          
+          statusBadge.className = `status-badge ${badgeClass}`;
+          
+          statusHeader.appendChild(statusTitle);
+          statusHeader.appendChild(statusBadge);
+          statusContainer.appendChild(statusHeader);
+          
+          // Add progress details for running crawler
+          if (crawler.running || crawler.current === "Crawling completed") {
+            // Progress container
+            const progressDetails = document.createElement('div');
+            progressDetails.className = 'progress-details';
+            
+            const progressPercent = crawler.total > 0 ? Math.round((crawler.progress / crawler.total) * 100) : 0;
+            progressDetails.innerHTML = `
+              <span>Progress: ${progressPercent}%</span>
+              <span>${crawler.progress} of ${crawler.total} publishers</span>
+            `;
+            statusContainer.appendChild(progressDetails);
+            
+            // Progress bar
+            const progressContainer = document.createElement('div');
+            progressContainer.className = 'progress-container';
+            
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressBar.style.width = `${progressPercent}%`;
+            
+            progressContainer.appendChild(progressBar);
+            statusContainer.appendChild(progressContainer);
+            
+            // Current task
+            if (crawler.running && crawler.current) {
+              const currentTask = document.createElement('div');
+              currentTask.className = 'current-task fade-in';
+              
+              currentTask.innerHTML = `
+                <div class="task-icon">
+                  <i class="fas fa-search"></i>
+                </div>
+                <div class="task-details">
+                  <div class="task-name">${crawler.current}</div>
+                  <div class="task-info">Finding and processing resources...</div>
+                </div>
+              `;
+              
+              statusContainer.appendChild(currentTask);
+            }
+            
+            // Stats
+            const progressStats = document.createElement('div');
+            progressStats.className = 'progress-stats';
+            
+            const resultsCount = crawler.results ? crawler.results.length : 0;
+            
+            progressStats.innerHTML = `
+              <div class="progress-stat">
+                <div class="stat-value">${crawler.total}</div>
+                <div class="stat-label">Publishers</div>
+              </div>
+              <div class="progress-stat">
+                <div class="stat-value">${crawler.progress}</div>
+                <div class="stat-label">Processed</div>
+              </div>
+              <div class="progress-stat">
+                <div class="stat-value">${resultsCount}</div>
+                <div class="stat-label">Results</div>
+              </div>
+            `;
+            
+            statusContainer.appendChild(progressStats);
+          }
+          
+          // Show error message if there's an error
+          if (crawler.current && crawler.current.startsWith("Error:")) {
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'alert alert-danger mt-3';
+            errorMessage.textContent = crawler.current;
+            statusContainer.appendChild(errorMessage);
+          }
+          
+          // Load results if completed
+          if (crawler.current === "Crawling completed") {
+            loadCrawlerResults();
+          }
+        }
+      } catch (error) {
+        console.error('Error polling crawler status:', error);
+      }
+    }
+
+    // Load crawler results
+    async function loadCrawlerResults() {
+      try {
+        const response = await fetch('/crawler/results');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          const results = data.results;
+          
+          const resultsContainer = document.getElementById('crawlerResults');
+          resultsContainer.innerHTML = '';
+          
+          if (results.length === 0) {
+            resultsContainer.innerHTML = '<div class="text-center"><p>No results found.</p></div>';
+            return;
+          }
+          
+          for (const result of results) {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            
+            resultItem.innerHTML = `
+              <div class="result-url">
+                <a href="${result.url}" target="_blank">${result.url}</a>
+              </div>
+              <div class="result-meta">
+                <span>Publisher: ${result.publisher}</span>
+                <span>Category: ${result.category}</span>
+              </div>
+            `;
+            
+            resultsContainer.appendChild(resultItem);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading crawler results:', error);
+      }
+    }
+    
+    // View all crawled links
+    document.getElementById('viewAllLinksBtn').addEventListener('click', loadAllCrawledLinks);
+    document.getElementById('viewStatsBtn').addEventListener('click', loadCrawlerStats);
+    document.getElementById('applyFiltersBtn').addEventListener('click', applyLinkFilters);
+    document.getElementById('resetFiltersBtn').addEventListener('click', resetLinkFilters);
+    
+    // Load all crawled links
+    async function loadAllCrawledLinks() {
+      // Show the all links card
+      document.getElementById('allLinksCard').style.display = 'block';
+      document.getElementById('statsCard').style.display = 'none';
+      
+      try {
+        // Load all links first
+        const response = await fetch('/crawler/links');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          const links = data.links;
+          populateLinkFilters(links);
+          displayLinks(links);
+        }
+      } catch (error) {
+        console.error('Error loading crawled links:', error);
+        document.getElementById('allCrawledLinks').innerHTML = 
+          '<div class="text-center"><p>Error loading crawled links</p></div>';
+      }
+    }
+    
+    // Load crawler statistics
+    async function loadCrawlerStats() {
+      // Show the stats card
+      document.getElementById('allLinksCard').style.display = 'none';
+      document.getElementById('statsCard').style.display = 'block';
+      
+      try {
+        const response = await fetch('/crawler/links/stats');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          const stats = data.stats;
+          displayStats(stats);
+        }
+      } catch (error) {
+        console.error('Error loading crawler statistics:', error);
+        document.getElementById('crawlerStats').innerHTML = 
+          '<div class="text-center"><p>Error loading statistics</p></div>';
+      }
+    }
+    
+    // Populate link filters
+    function populateLinkFilters(links) {
+      const publisherFilter = document.getElementById('publisherFilter');
+      const categoryFilter = document.getElementById('categoryFilter');
+      
+      // Get unique publishers and categories
+      const publishers = new Set();
+      const categories = new Set();
+      
+      links.forEach(link => {
+        if (link.publisher) publishers.add(link.publisher);
+        if (link.category) categories.add(link.category);
+      });
+      
+      // Clear existing options except first one
+      publisherFilter.innerHTML = '<option value="">All Publishers</option>';
+      categoryFilter.innerHTML = '<option value="">All Categories</option>';
+      
+      // Add publisher options
+      Array.from(publishers).sort().forEach(publisher => {
+        const option = document.createElement('option');
+        option.value = publisher;
+        option.textContent = publisher;
+        publisherFilter.appendChild(option);
+      });
+      
+      // Add category options
+      Array.from(categories).sort().forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categoryFilter.appendChild(option);
+      });
+    }
+    
+    // Apply link filters
+    async function applyLinkFilters() {
+      const publisher = document.getElementById('publisherFilter').value;
+      const category = document.getElementById('categoryFilter').value;
+      
+      try {
+        let url = '/crawler/links';
+        let responseData;
+        
+        // Check which filter to apply
+        if (publisher && !category) {
+          // Filter by publisher
+          const response = await fetch(`/crawler/links/publisher/${publisher}`);
+          responseData = await response.json();
+        } else if (category && !publisher) {
+          // Filter by category
+          const response = await fetch(`/crawler/links/category/${category}`);
+          responseData = await response.json();
+        } else if (publisher && category) {
+          // Filter by both - need to fetch one and filter client-side
+          const response = await fetch(`/crawler/links/publisher/${publisher}`);
+          const data = await response.json();
+          
+          // Filter by category client-side
+          if (data.status === 'success') {
+            const filteredLinks = data.links.filter(link => link.category === category);
+            displayLinks(filteredLinks);
+            return;
+          }
+        } else {
+          // No filters - get all links
+          const response = await fetch(url);
+          responseData = await response.json();
+        }
+        
+        if (responseData && responseData.status === 'success') {
+          displayLinks(responseData.links);
+        }
+      } catch (error) {
+        console.error('Error applying filters:', error);
+        document.getElementById('allCrawledLinks').innerHTML = 
+          '<div class="text-center"><p>Error filtering links</p></div>';
+      }
+    }
+    
+    // Reset link filters
+    function resetLinkFilters() {
+      document.getElementById('publisherFilter').value = '';
+      document.getElementById('categoryFilter').value = '';
+      loadAllCrawledLinks();
+    }
+    
+    // Display links in table
+    function displayLinks(links) {
+      const linksContainer = document.getElementById('allCrawledLinks');
+      linksContainer.innerHTML = '';
+      
+      if (links.length === 0) {
+        linksContainer.innerHTML = '<div class="text-center"><p>No links match your filters.</p></div>';
+        return;
+      }
+      
+      // Create a table to display links with metadata
+      const table = document.createElement('table');
+      table.className = 'table table-striped';
+      
+      // Create table header
+      const thead = document.createElement('thead');
+      thead.innerHTML = `
+        <tr>
+          <th>URL</th>
+          <th>Publisher</th>
+          <th>Category</th>
+          <th>Date Added</th>
+        </tr>
+      `;
+      table.appendChild(thead);
+      
+      // Create table body
+      const tbody = document.createElement('tbody');
+      
+      // Sort links by timestamp (newest first)
+      links.sort((a, b) => {
+        if (!a.timestamp) return 1;
+        if (!b.timestamp) return -1;
+        return new Date(b.timestamp) - new Date(a.timestamp);
+      });
+      
+      for (const link of links) {
+        const row = document.createElement('tr');
+        
+        // Format date if available
+        let formattedDate = 'Unknown';
+        if (link.timestamp) {
+          try {
+            formattedDate = new Date(link.timestamp).toLocaleString();
+          } catch (e) {
+            formattedDate = link.timestamp;
+          }
+        }
+        
+        row.innerHTML = `
+          <td><a href="${link.url}" target="_blank">${link.url}</a></td>
+          <td>${link.publisher || 'Unknown'}</td>
+          <td>${link.category || 'Unknown'}</td>
+          <td>${formattedDate}</td>
+        `;
+        
+        tbody.appendChild(row);
+      }
+      
+      table.appendChild(tbody);
+      linksContainer.appendChild(table);
+    }
+    
+    // Display statistics
+    function displayStats(stats) {
+      const statsContainer = document.getElementById('crawlerStats');
+      statsContainer.innerHTML = '';
+      
+      if (!stats || stats.total === 0) {
+        statsContainer.innerHTML = '<div class="text-center"><p>No links have been crawled yet.</p></div>';
+        return;
+      }
+      
+      // Create stats summary
+      const summaryDiv = document.createElement('div');
+      summaryDiv.className = 'stat-summary';
+      summaryDiv.textContent = `Total Links: ${stats.total}`;
+      statsContainer.appendChild(summaryDiv);
+      
+      // Create stats container
+      const statsGrid = document.createElement('div');
+      statsGrid.className = 'stats-container';
+      
+      // Create publisher stats card
+      const publisherCard = createStatCard('By Publisher', stats.by_publisher);
+      statsGrid.appendChild(publisherCard);
+      
+      // Create category stats card
+      const categoryCard = createStatCard('By Category', stats.by_category);
+      statsGrid.appendChild(categoryCard);
+      
+      statsContainer.appendChild(statsGrid);
+    }
+    
+    // Create a stat card
+    function createStatCard(title, data) {
+      const card = document.createElement('div');
+      card.className = 'stat-card';
+      
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'stat-title';
+      
+      const titleText = document.createElement('span');
+      titleText.textContent = title;
+      
+      const count = document.createElement('span');
+      count.className = 'stat-count';
+      count.textContent = Object.keys(data).length;
+      
+      titleDiv.appendChild(titleText);
+      titleDiv.appendChild(count);
+      
+      const list = document.createElement('div');
+      list.className = 'stat-list';
+      
+      // Add items to the list
+      for (const [key, value] of Object.entries(data)) {
+        const item = document.createElement('div');
+        item.className = 'stat-item';
+        
+        const name = document.createElement('div');
+        name.className = 'stat-item-name';
+        name.textContent = key;
+        
+        const val = document.createElement('div');
+        val.className = 'stat-item-value';
+        val.textContent = value;
+        
+        item.appendChild(name);
+        item.appendChild(val);
+        list.appendChild(item);
+      }
+      
+      card.appendChild(titleDiv);
+      card.appendChild(list);
+      
+      return card;
+    }
+
+    // Add a new publisher
+    async function addPublisher() {
+      const category = document.getElementById('crawlerCategory').value;
+      const publisherName = document.getElementById('publisherName').value.trim();
+      const url = document.getElementById('publisherUrl').value.trim();
+      
+      if (!category) {
+        showStatus('publisherStatus', 'Please select a category', 'error');
+        return;
+      }
+      
+      if (!publisherName || !url) {
+        showStatus('publisherStatus', 'Please enter publisher name and URL', 'error');
+        return;
+      }
+      
+      try {
+        showStatus('publisherStatus', 'Adding publisher...', 'loading');
+        
+        const response = await fetch('/crawler-settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            category,
+            publisher_name: publisherName,
+            url
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          showStatus('publisherStatus', 'Publisher added successfully!', 'success');
+          
+          // Clear form
+          document.getElementById('publisherName').value = '';
+          document.getElementById('publisherUrl').value = '';
+          
+          // Reload publishers
+          loadPublishers();
+        } else {
+          showStatus('publisherStatus', `Error: ${data.error}`, 'error');
+        }
+      } catch (error) {
+        showStatus('publisherStatus', `Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Delete a publisher
+    async function deletePublisher(category, publisher) {
+      if (!confirm(`Are you sure you want to delete ${publisher}?`)) {
+        return;
+      }
+      
+      try {
+        showStatus('publisherStatus', 'Deleting publisher...', 'loading');
+        
+        const response = await fetch(`/crawler-settings/${category}/${publisher}`, {
+          method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          showStatus('publisherStatus', 'Publisher deleted successfully!', 'success');
+          
+          // Reload publishers
+          loadPublishers();
+        } else {
+          showStatus('publisherStatus', `Error: ${data.error}`, 'error');
+        }
+      } catch (error) {
+        showStatus('publisherStatus', `Error: ${error.message}`, 'error');
       }
     }
   </script>
