@@ -3452,6 +3452,23 @@
             document.getElementById("publisherHelp").textContent = "Enter the name of the publication or website.";
           }
           
+          // Set publication date if available, otherwise use today's date
+          const dateField = document.getElementById("date");
+          if (data.publish_date) {
+            // Convert the date to YYYY-MM-DD format for the date input
+            try {
+              // If date is ISO format with time part, extract just the date
+              const datePart = data.publish_date.split('T')[0];
+              dateField.value = datePart;
+            } catch (e) {
+              // If conversion fails, use today's date
+              dateField.value = new Date().toISOString().split('T')[0];
+            }
+          } else {
+            // Use today's date if no publish date available
+            dateField.value = new Date().toISOString().split('T')[0];
+          }
+          
           // Display editor note if available
           if (data.editor_note) {
             document.getElementById("editorNote").textContent = data.editor_note;
@@ -3527,6 +3544,19 @@
                   
                   if (forceData.identified_publisher) {
                     document.getElementById("publisher").value = forceData.identified_publisher;
+                  }
+                  
+                  // Set publication date if available in force add response
+                  const dateField = document.getElementById("date");
+                  if (forceData.publish_date) {
+                    try {
+                      const datePart = forceData.publish_date.split('T')[0];
+                      dateField.value = datePart;
+                    } catch (e) {
+                      dateField.value = new Date().toISOString().split('T')[0];
+                    }
+                  } else {
+                    dateField.value = new Date().toISOString().split('T')[0];
                   }
                   
                   if (forceData.editor_note) {

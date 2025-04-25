@@ -444,7 +444,7 @@ def scrape_article():
                 summary = result.get("summary", "")
                 
                 # Add prompt for editor to improve the summary if needed
-                editor_note = "EDITOR NOTE: This is an auto-generated summary. Consider editing to ensure it captures the main point of the article for newsletter readers."
+                editor_note = ""
                 
                 # Add tags or matched terms if available
                 matched_tags = result.get("matched_tags", [])
@@ -453,6 +453,11 @@ def scrape_article():
                     # Only append tags if summary isn't already too long
                     if len(summary) < 120:
                         summary = f"{summary}\n\n{tags_info}"
+                
+                # Get publication date from metadata if available
+                publication_date = None
+                if "metadata" in result and result["metadata"].get("publish_date"):
+                    publication_date = result["metadata"].get("publish_date")
                 
                 # Add the URL to the crawled_links.json after successful scraping
                 # This will happen when the client confirms the addition to the sheet
@@ -463,7 +468,8 @@ def scrape_article():
                     "editor_note": editor_note,
                     "matched_tags": matched_tags,
                     "publisher": result.get("publisher"),
-                    "identified_publisher": result.get("identified_publisher")
+                    "identified_publisher": result.get("identified_publisher"),
+                    "publish_date": publication_date
                 }), 200
                 
         except Exception as scrape_error:
