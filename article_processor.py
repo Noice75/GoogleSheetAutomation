@@ -6,13 +6,7 @@ import json
 import os
 import logging
 from datetime import datetime
-import nltk
 import string
-import networkx as nx
-from nltk.tokenize import sent_tokenize, word_tokenize
-from nltk.corpus import stopwords
-from nltk.cluster.util import cosine_distance
-import numpy as np
 from urllib.parse import urlparse
 import re
 
@@ -20,80 +14,6 @@ import re
 logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-# Download necessary NLTK data
-try:
-    # Create the NLTK data directory if it doesn't exist
-    nltk_data_dir = os.path.join(os.path.expanduser('~'), 'nltk_data')
-    if not os.path.exists(nltk_data_dir):
-        os.makedirs(nltk_data_dir)
-    
-    # Download all required resources with explicit paths
-    nltk.download('punkt', quiet=True, download_dir=nltk_data_dir)
-    nltk.download('stopwords', quiet=True, download_dir=nltk_data_dir)
-    
-    # Also download punkt_tab specifically which is needed for TextRank
-    try:
-        nltk.download('punkt_tab', quiet=True, download_dir=nltk_data_dir)
-    except Exception as e:
-        logger.warning(f"Error downloading punkt_tab: {str(e)}. Will use fallback tokenizer.")
-    
-    # Make sure nltk.tokenize.punkt is properly initialized
-    import nltk.data
-    try:
-        nltk.data.find('tokenizers/punkt')
-    except LookupError:
-        logger.warning("Re-downloading punkt due to lookup error")
-        nltk.download('punkt', quiet=False, download_dir=nltk_data_dir)
-    
-    logger.info("Successfully downloaded NLTK resources")
-except Exception as e:
-    logger.warning(f"Error downloading NLTK data: {str(e)}")
-
-def manual_sentence_tokenize(text):
-    """
-    A simple fallback sentence tokenizer when NLTK's sentence tokenizer is not available.
-    This is a very basic implementation and doesn't handle all edge cases.
-    """
-    # Replace common abbreviations to avoid splitting them
-    text = text.replace("Mr.", "Mr_DOT_")
-    text = text.replace("Mrs.", "Mrs_DOT_")
-    text = text.replace("Dr.", "Dr_DOT_")
-    text = text.replace("Ph.D.", "PhD_DOT_")
-    text = text.replace("i.e.", "ie_DOT_")
-    text = text.replace("e.g.", "eg_DOT_")
-    
-    # Split on sentence-ending punctuation followed by space and uppercase letter
-    sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', text)
-    
-    # Restore the abbreviations
-    result = []
-    for sentence in sentences:
-        sentence = sentence.replace("Mr_DOT_", "Mr.")
-        sentence = sentence.replace("Mrs_DOT_", "Mrs.")
-        sentence = sentence.replace("Dr_DOT_", "Dr.")
-        sentence = sentence.replace("PhD_DOT_", "Ph.D.")
-        sentence = sentence.replace("ie_DOT_", "i.e.")
-        sentence = sentence.replace("eg_DOT_", "e.g.")
-        result.append(sentence)
-    
-    return result
-
-def safe_sent_tokenize(text):
-    """
-    A safe wrapper around sent_tokenize that falls back to manual tokenization
-    if NLTK's tokenizer encounters an error.
-    """
-    try:
-        sentences = sent_tokenize(text)
-        # If we got meaningful sentences, return them
-        if len(sentences) > 1:
-            return sentences
-    except Exception as e:
-        logger.warning(f"NLTK sent_tokenize failed: {str(e)}")
-    
-    # Fallback to manual tokenization
-    return manual_sentence_tokenize(text)
 
 class ArticleProcessor:
     def __init__(self):
@@ -276,145 +196,21 @@ class ArticleProcessor:
             logger.error(f"Article extraction failed: {str(e)}")
             return None, None, f"Could not extract the article: {str(e)}"
     
-    def _sentence_similarity(self, sent1, sent2, stopwords=None):
-        """Calculate similarity between two sentences using word vectors"""
-        if stopwords is None:
-            try:
-                stopwords = set(stopwords.words('english'))
-            except:
-                stopwords = set()
-        
-        sent1 = [w.lower() for w in word_tokenize(sent1) if w.lower() not in stopwords and w not in string.punctuation]
-        sent2 = [w.lower() for w in word_tokenize(sent2) if w.lower() not in stopwords and w not in string.punctuation]
-        
-        # If both sentences are empty, they are identical
-        if len(sent1) == 0 and len(sent2) == 0:
-            return 1.0
-        
-        # If one is empty and the other isn't, they are completely different
-        if len(sent1) == 0 or len(sent2) == 0:
-            return 0.0
-            
-        # Create vocabulary and vectors for both sentences
-        all_words = list(set(sent1 + sent2))
-        vector1 = [0] * len(all_words)
-        vector2 = [0] * len(all_words)
-        
-        # Build the vectors
-        for w in sent1:
-            if w in all_words:
-                vector1[all_words.index(w)] += 1
-                
-        for w in sent2:
-            if w in all_words:
-                vector2[all_words.index(w)] += 1
-                
-        # Calculate cosine similarity
-        return 1 - cosine_distance(vector1, vector2)
-    
-    def _build_similarity_matrix(self, sentences, stopwords=None):
-        """Build similarity matrix for all sentences"""
-        # Create an empty similarity matrix
-        similarity_matrix = np.zeros((len(sentences), len(sentences)))
-        
-        for i in range(len(sentences)):
-            for j in range(len(sentences)):
-                if i != j:
-                    similarity_matrix[i][j] = self._sentence_similarity(sentences[i], sentences[j], stopwords)
-                    
-        return similarity_matrix
-    
-    def summarize_article(self, text, max_sentences=2, fallback_max_length=150):
+    def summarize_article(self, text, max_length=200):
         """
-        Create a very concise summary that attracts readers - just 2-3 lines maximum.
-        Focuses on the key points rather than details.
-        
-        First tries using newspaper3k's built-in summarization if we have a URL,
-        then falls back to TextRank if that fails.
+        Create a very concise summary using newspaper3k or simple truncation.
+        Just 2-3 lines maximum to attract readers.
         """
         if not text:
             return ""
         
-        # Define stricter character limits for a shorter, more attractive summary
-        # 200 chars is approximately 2-3 lines
-        strict_max_char_limit = 200
+        # Use simple truncation for consistent, brief summaries
+        # This ensures we don't need complex NLP for summarization
+        first_para = text.split('\n\n')[0]
         
-        # TextRank summarization
-        try:
-            # Get stopwords
-            try:
-                stop_words = set(stopwords.words('english'))
-            except Exception as e:
-                logger.warning(f"Error loading stopwords: {str(e)}")
-                stop_words = set()
-            
-            # Tokenize the text into sentences using our safe wrapper
-            sentences = safe_sent_tokenize(text)
-                
-            # If no sentences found or too few, fallback to truncation
-            if not sentences or len(sentences) <= 1:
-                logger.warning("Could not extract sentences from text, using truncation")
-                # Much shorter summary for newsletter format
-                return text[:strict_max_char_limit] + "..." if len(text) > strict_max_char_limit else text
-                    
-            # If there are very few sentences, just return them all or truncate them
-            if len(sentences) <= max_sentences:
-                combined = ' '.join(sentences)
-                if len(combined) > strict_max_char_limit:
-                    # Truncate to strict limit and add ellipsis
-                    return combined[:strict_max_char_limit] + "..."
-                return combined
-            
-            # Extract key sentences focusing on the beginning of the article
-            # which typically contains the main point/topic
-            intro_weight = 2.5  # Give more weight to introductory sentences for a "hook"
-            
-            # Build similarity matrix
-            sentence_similarity_matrix = self._build_similarity_matrix(sentences, stop_words)
-            
-            # Rank sentences using PageRank algorithm with bias toward early sentences
-            nx_graph = nx.from_numpy_array(sentence_similarity_matrix)
-            
-            # Add bias for early sentences (first 15% of the article)
-            # More focused on the very beginning for a hook
-            initial_sentences = max(1, int(len(sentences) * 0.15))
-            personalization = {}
-            for i in range(len(sentences)):
-                if i < initial_sentences:
-                    personalization[i] = intro_weight
-                else:
-                    personalization[i] = 1.0
-            
-            # Apply PageRank with personalization to favor early sentences
-            scores = nx.pagerank(nx_graph, personalization=personalization)
-            
-            # Sort sentences by score and select top ones
-            ranked_sentences = sorted(((scores[i], i, s) for i, s in enumerate(sentences)), reverse=True)
-            
-            # Get the top N sentences (limited to just 1-2 for brevity)
-            max_sentences = min(max_sentences, 2)  # Limit to 1-2 sentences max
-            top_sentence_indices = [ranked_sentences[i][1] for i in range(min(max_sentences, len(ranked_sentences)))]
-            
-            # Sort the selected sentences by their position in the original text
-            # to maintain logical flow
-            top_sentence_indices.sort()
-            
-            # Join the selected sentences
-            summary = ' '.join([sentences[i] for i in top_sentence_indices])
-            
-            # Always enforce the strict character limit
-            if len(summary) > strict_max_char_limit:
-                return summary[:strict_max_char_limit] + "..."
-                
-            return summary
-            
-        except Exception as e:
-            logger.warning(f"Error in article summarization: {str(e)}. Falling back to simple truncation.")
-            # Fallback to simple truncation if summarization fails
-            # Keep it very short
-            if len(text) > strict_max_char_limit:
-                return text[:strict_max_char_limit] + "..."
-            return text
+        if len(first_para) > max_length:
+            return first_para[:max_length] + "..."
+        return first_para
     
     def check_article_relevance(self, category, text):
         """Check if article contains any of the tags for the given category"""
@@ -520,7 +316,7 @@ class ArticleProcessor:
                 else:
                     summary = article.summary
             else:
-                # Fallback to our custom summarization which is already configured for brevity
+                # Fallback to our simple summarization (first paragraph)
                 summary = self.summarize_article(text)
                 
             # Get metadata

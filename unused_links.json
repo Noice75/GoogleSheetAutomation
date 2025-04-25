@@ -1,28 +1,28 @@
 [
     {
+        "url": "https://techcrunch.com/video/the-future-of-ai-governance-with-sb-1047-architect-sen-scott-wiener/",
+        "timestamp": "2025-04-25T23:57:51.254591",
+        "category": "NEWS",
+        "publisher": "Techcrunch",
+        "reason": "None of the tags ['ai governance'] found in the article"
+    },
+    {
         "url": "https://techcrunch.com/category/artificial-intelligence/",
-        "timestamp": "2025-04-25T23:50:47.403409",
+        "timestamp": "2025-04-25T23:58:02.582273",
         "category": "NEWS",
         "publisher": "Techcrunch",
         "reason": "None of the tags ['ai governance'] found in the article"
     },
     {
         "url": "https://techcrunch.com/2025/03/11/eu-ai-act-latest-draft-code-for-ai-model-makers-tiptoes-towards-gentler-guidance-for-big-ai/",
-        "timestamp": "2025-04-25T23:50:48.220863",
+        "timestamp": "2025-04-25T23:58:13.419505",
         "category": "NEWS",
         "publisher": "Techcrunch",
         "reason": "None of the tags ['ai governance'] found in the article"
     },
     {
-        "url": "https://techcrunch.com/video/the-future-of-ai-governance-with-sb-1047-architect-sen-scott-wiener/",
-        "timestamp": "2025-04-25T23:50:48.997234",
-        "category": "NEWS",
-        "publisher": "Techcrunch",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://techcrunch.com/2023/11/20/openai-governance-model-investors/",
-        "timestamp": "2025-04-25T23:51:05.867308",
+        "url": "https://techcrunch.com/2023/02/16/ai_governance/",
+        "timestamp": "2025-04-25T23:58:53.940887",
         "category": "NEWS",
         "publisher": "Techcrunch",
         "reason": "None of the tags ['ai governance'] found in the article"

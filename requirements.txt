@@ -7,8 +7,6 @@ requests>=2.27.1
 beautifulsoup4>=4.10.0
 fake-useragent>=0.1.11
 networkx>=2.6.3
-nltk>=3.6.5
 numpy>=1.21.4
 selenium>=3.141.0
 webdriver-manager>=3.5.2
-scipy

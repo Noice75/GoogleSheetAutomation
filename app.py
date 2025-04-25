@@ -11,24 +11,6 @@ import threading
 from urllib.parse import urlparse
 from crawler import setup_driver, search, get_base_url
 from article_processor import scrape_and_check_article
-import nltk
-
-# Pre-download NLTK resources
-def download_nltk_resources():
-    nltk_data_dir = os.path.join(os.path.expanduser('~'), 'nltk_data')
-    if not os.path.exists(nltk_data_dir):
-        os.makedirs(nltk_data_dir)
-    
-    print("Downloading NLTK resources...")
-    nltk.download('punkt', download_dir=nltk_data_dir)
-    nltk.download('stopwords', download_dir=nltk_data_dir)
-    print("NLTK resources downloaded successfully")
-
-# Try to download resources at startup
-try:
-    download_nltk_resources()
-except Exception as e:
-    print(f"Error downloading NLTK resources: {str(e)}")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
