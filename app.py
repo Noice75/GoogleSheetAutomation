@@ -1,3 +1,4 @@
+import time
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 import gspread
@@ -638,7 +639,7 @@ def append_links_batch(links, publisher=None, category=None, file_path="crawled_
 def run_crawler(categories=None, publishers=None, max_pages=5):
     """Run the crawler with the specified filters"""
     global crawler_status
-    
+    start_time = time.time()
     # Reset crawler status
     crawler_status = {
         "running": True,
@@ -818,6 +819,8 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
         # Crawler completed successfully
         crawler_status["running"] = False
         crawler_status["current"] = "Crawling completed"
+        total_time = time.time() - start_time
+        logger.info(f"Total processing time: {total_time:.2f} seconds")
         
     except Exception as e:
         logger.error(f"Error running crawler: {str(e)}")
