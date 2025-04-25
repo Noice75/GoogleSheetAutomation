@@ -1,278 +1,38 @@
 [
     {
-        "url": "https://techcrunch.com/video/the-future-of-ai-governance-with-sb-1047-architect-sen-scott-wiener/",
-        "timestamp": "2025-04-25T23:57:51.257096",
-        "publisher": "Techcrunch",
+        "url": "https://www.iaps.ai/research/future-of-ai-summit-series",
+        "timestamp": "2025-04-26T01:15:01.119779",
+        "publisher": "IAPS",
         "category": "NEWS"
     },
     {
-        "url": "https://techcrunch.com/2024/09/19/ai-governance-cant-be-left-to-the-vested-interests/",
-        "timestamp": "2025-04-25T23:57:54.448889",
-        "publisher": "Techcrunch",
-        "category": "NEWS",
-        "metadata": {
-            "authors": [
-                "Natasha Lomas",
-                "Senior Reporter",
-                "Sean O'Kane",
-                "Sarah Perez",
-                "Julie Bort",
-                "Mary Ann Azevedo",
-                "Lauren Forristal",
-                "Charles Rollet",
-                "--C-Author-Card-Image-Size Align-Items Center Display Flex Gap Var",
-                "Media"
-            ],
-            "publish_date": "2024-09-19T00:00:00",
-            "top_image": "https://techcrunch.com/wp-content/uploads/2024/09/1718730568584.jpeg?resize=1200,781",
-            "keywords": [
-                "big",
-                "scale",
-                "governance",
-                "interests",
-                "ai",
-                "risks",
-                "left",
-                "report",
-                "body",
-                "global",
-                "vested",
-                "data",
-                "privacy",
-                "cant"
-            ]
-        }
-    },
-    {
-        "url": "https://techcrunch.com/category/artificial-intelligence/",
-        "timestamp": "2025-04-25T23:58:02.583271",
-        "publisher": "Techcrunch",
+        "url": "https://www.iaps.ai/research/governance-gap",
+        "timestamp": "2025-04-26T01:15:12.535592",
+        "publisher": "IAPS",
         "category": "NEWS"
     },
     {
-        "url": "https://techcrunch.com/2023/10/27/openai-google-and-an-digital-anthropologist-the-un-forms-a-high-level-board-to-explore-ai-governance/",
-        "timestamp": "2025-04-25T23:58:06.036597",
-        "publisher": "Techcrunch",
-        "category": "NEWS",
-        "metadata": {
-            "authors": [
-                "Ingrid Lunden",
-                "Europe Editor",
-                "Sean O'Kane",
-                "Sarah Perez",
-                "Julie Bort",
-                "Mary Ann Azevedo",
-                "Lauren Forristal",
-                "Charles Rollet",
-                "--C-Author-Card-Image-Size Align-Items Center Display Flex Gap Var",
-                "Media"
-            ],
-            "publish_date": "2023-10-27T00:00:00",
-            "top_image": "https://techcrunch.com/wp-content/uploads/2019/03/GettyImages-1074644658.jpg?resize=1200,776",
-            "keywords": [
-                "openai",
-                "advisory",
-                "governance",
-                "digital",
-                "explore",
-                "highlevel",
-                "ai",
-                "number",
-                "misinformation",
-                "risks",
-                "anthropologist",
-                "building",
-                "work",
-                "board",
-                "forms",
-                "international",
-                "google",
-                "group"
-            ]
-        }
-    },
-    {
-        "url": "https://techcrunch.com/2025/03/11/eu-ai-act-latest-draft-code-for-ai-model-makers-tiptoes-towards-gentler-guidance-for-big-ai/",
-        "timestamp": "2025-04-25T23:58:13.420505",
-        "publisher": "Techcrunch",
-        "category": "NEWS"
-    },
-    {
-        "url": "https://techcrunch.com/2024/02/24/miranda-bogen-is-creating-solutions-to-help-govern-ai/",
-        "timestamp": "2025-04-25T23:58:16.489097",
-        "publisher": "Techcrunch",
-        "category": "NEWS",
-        "metadata": {
-            "authors": [
-                "Dominic-Madori Davis",
-                "Senior Reporter",
-                "Sean O'Kane",
-                "Sarah Perez",
-                "Julie Bort",
-                "Mary Ann Azevedo",
-                "Lauren Forristal",
-                "Charles Rollet",
-                "--C-Author-Card-Image-Size Align-Items Center Display Flex Gap Var",
-                "Media"
-            ],
-            "publish_date": "2024-02-24T00:00:00",
-            "top_image": "https://techcrunch.com/wp-content/uploads/2024/02/women-in-ai-.jpg?resize=1200,675",
-            "keywords": [
-                "teams",
-                "women",
-                "miranda",
-                "harms",
-                "bogen",
-                "ai",
-                "solutions",
-                "govern",
-                "working",
-                "way",
-                "creating",
-                "work",
-                "systems",
-                "system",
-                "technical",
-                "help"
-            ]
-        }
-    },
-    {
-        "url": "https://techcrunch.com/2024/05/29/with-the-eu-ai-act-incoming-this-summer-the-bloc-lays-out-its-plan-for-ai-governance/",
-        "timestamp": "2025-04-25T23:58:25.562855",
-        "publisher": "Techcrunch",
-        "category": "NEWS",
-        "metadata": {
-            "authors": [
-                "Natasha Lomas",
-                "Senior Reporter",
-                "Sean O'Kane",
-                "Sarah Perez",
-                "Julie Bort",
-                "Mary Ann Azevedo",
-                "Lauren Forristal",
-                "Charles Rollet",
-                "--C-Author-Card-Image-Size Align-Items Center Display Flex Gap Var",
-                "Media"
-            ],
-            "publish_date": "2024-05-29T00:00:00",
-            "top_image": "https://techcrunch.com/wp-content/uploads/2023/07/GettyImages-1193843538.jpg?resize=1200,675",
-            "keywords": [
-                "models",
-                "act",
-                "commission",
-                "governance",
-                "ai",
-                "incoming",
-                "summer",
-                "eu",
-                "safety",
-                "lays",
-                "plan",
-                "unit",
-                "bloc",
-                "including",
-                "units",
-                "role",
-                "office"
-            ]
-        }
-    },
-    {
-        "url": "https://techcrunch.com/2025/02/10/ai-pioneer-fei-fei-li-says-governments-should-embrace-a-pragmatic-attitude-instead-of-an-ideological-one-on-ai/",
-        "timestamp": "2025-04-25T23:58:34.471882",
-        "publisher": "Techcrunch",
-        "category": "NEWS",
-        "metadata": {
-            "authors": [
-                "Romain Dillet",
-                "Senior Reporter",
-                "Sean O'Kane",
-                "Sarah Perez",
-                "Julie Bort",
-                "Mary Ann Azevedo",
-                "Lauren Forristal",
-                "Charles Rollet",
-                "--C-Author-Card-Image-Size Align-Items Center Display Flex Gap Var",
-                "Media"
-            ],
-            "publish_date": "2025-02-10T00:00:00",
-            "top_image": "https://techcrunch.com/wp-content/uploads/2025/02/Fei-Fei-Li-France-AI-Action-Summit.jpg?resize=1200,675",
-            "keywords": [
-                "research",
-                "instead",
-                "companies",
-                "policymakers",
-                "ai",
-                "pioneer",
-                "rules",
-                "technology",
-                "sensationalism",
-                "let",
-                "scifi",
-                "shape",
-                "need",
-                "warns",
-                "summit",
-                "li",
-                "world",
-                "feifei",
-                "action"
-            ]
-        }
-    },
-    {
-        "url": "https://techcrunch.com/tag/ai-governance/",
-        "timestamp": "2025-04-25T23:58:42.556424",
-        "publisher": "Techcrunch",
-        "category": "NEWS"
-    },
-    {
-        "url": "https://techcrunch.com/2023/12/18/a-quick-guide-to-ethical-and-responsible-ai-governance/",
-        "timestamp": "2025-04-25T23:58:45.891079",
-        "publisher": "Techcrunch",
-        "category": "NEWS",
-        "metadata": {
-            "authors": [
-                "Phani Dasari",
-                "Sean O'Kane",
-                "Sarah Perez",
-                "Julie Bort",
-                "Mary Ann Azevedo",
-                "Lauren Forristal",
-                "Charles Rollet",
-                "--C-Author-Card-Image-Size Align-Items Center Display Flex Gap Var",
-                "Media",
-                "Min-Width"
-            ],
-            "publish_date": "2023-12-18T00:00:00",
-            "top_image": "https://techcrunch.com/wp-content/uploads/2023/12/GettyImages-471112156.jpg?resize=1200,800",
-            "keywords": [
-                "organizations",
-                "governance",
-                "processes",
-                "ai",
-                "ethical",
-                "model",
-                "guide",
-                "systems",
-                "responsible",
-                "quick",
-                "technologies",
-                "data"
-            ]
-        }
-    },
-    {
-        "url": "https://techcrunch.com/2023/02/16/ai_governance/",
-        "timestamp": "2025-04-25T23:58:53.941898",
-        "publisher": "Techcrunch",
+        "url": "https://www.iaps.ai/research",
+        "timestamp": "2025-04-26T01:15:21.488940",
+        "publisher": "IAPS",
         "category": "NEWS"
     },
     {
         "url": "https://www.iaps.ai/research/tag/International+governance+%26+China",
-        "timestamp": "2025-04-26T00:49:13.708655",
+        "timestamp": "2025-04-26T01:15:31.108372",
         "publisher": "IAPS",
+        "category": "NEWS"
+    },
+    {
+        "url": "https://www.technologyreview.com/2024/03/15/1089844/africa-ai-artificial-intelligence-regulation-au-policy/",
+        "timestamp": "2025-04-26T01:16:01.268111",
+        "publisher": "Technologyreview",
+        "category": "NEWS"
+    },
+    {
+        "url": "https://www.technologyreview.com/2024/01/09/1085768/bringing-breakthrough-data-intelligence-to-industries/",
+        "timestamp": "2025-04-26T01:18:59.262560",
+        "publisher": "Technologyreview",
         "category": "NEWS"
     }
 ]

@@ -272,10 +272,6 @@ def process_links(links, category=None, publisher=None, processed_results=None):
         processed_results.append(result)
         newly_processed += 1
         
-        # Save link to crawled_links.json immediately after processing
-        append_link(link, publisher, category, result.get('metadata'))
-        print(f"💾 Saved to crawled_links.json: {link}")
-        
         # If relevant, upload to Google Sheets
         if result.get('status') == 'success':
             print(f"✅ Relevant article found: {result.get('title', 'No title')}")
@@ -320,7 +316,21 @@ def process_links(links, category=None, publisher=None, processed_results=None):
                 print(f"⚠️ Error checking/creating worksheet: {str(e)}")
                 
             # Try to upload to Google Sheets
-            upload_to_sheet(result)
+            upload_success = upload_to_sheet(result)
+            
+            # Only save to crawled_links.json if the upload was successful
+            if upload_success:
+                append_link(link, publisher, category, result.get('metadata'))
+                print(f"💾 Saved to crawled_links.json: {link}")
+            else:
+                print(f"⚠️ Not saving to crawled_links.json due to upload failure: {link}")
+        else:
+            # For irrelevant or error articles, still record them but in unused_links.json
+            if result.get('status') == 'irrelevant':
+                from article_processor import ArticleProcessor
+                processor = ArticleProcessor()
+                processor.save_unused_link(link, category, publisher, result.get('reason', 'No matching tags'))
+                print(f"📝 Saved irrelevant article to unused_links.json: {link}")
     
     if skipped_processed > 0:
         print(f"⏭️ Skipped {skipped_processed} already processed links")

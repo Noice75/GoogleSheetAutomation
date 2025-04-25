@@ -11,6 +11,7 @@ import threading
 from urllib.parse import urlparse
 from crawler import setup_driver, search, get_base_url
 from article_processor import scrape_and_check_article
+import requests
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
@@ -214,6 +215,7 @@ def add_link():
                         try:
                             with open("crawled_links.json", "r") as f:
                                 crawled_data = json.load(f)
+                                # Only check for exact URL matches, not string in string
                                 for item in crawled_data:
                                     if isinstance(item, dict) and item.get("url") == link:
                                         # Return as error to work with original UI
@@ -221,6 +223,12 @@ def add_link():
                                             "status": "error", 
                                             "error": f"This article already exists in the Google Sheet (added under {item.get('category', 'unknown')} category)"
                                         }), 400
+                        except json.JSONDecodeError:
+                            # If JSON is invalid, treat as empty or corrupted file
+                            logger.warning("crawled_links.json is corrupted, treating as empty")
+                            # Create a new file
+                            with open("crawled_links.json", "w") as f:
+                                json.dump([], f)
                         except Exception as e:
                             logger.error(f"Error checking crawled links: {str(e)}")
             except Exception as e:
@@ -237,7 +245,6 @@ def add_link():
         # Add the data row with HYPERLINK formula, placing Publisher before Date
         # Use empty string if publisher is None
         publisher_value = publisher if publisher else ""
-        print(publisher_value)
         worksheet.append_row([hyperlink_formula, summary, publisher_value, date], value_input_option="USER_ENTERED")
         
         # Successfully added to sheet, now add to crawled_links.json
@@ -406,6 +413,12 @@ def scrape_article():
                                             "status": "error", 
                                             "error": f"This article already exists in the Google Sheet (added under {item.get('category', 'unknown')} category)"
                                         }), 400
+                        except json.JSONDecodeError:
+                            # If JSON is invalid, treat as empty or corrupted file
+                            logger.warning("crawled_links.json is corrupted, treating as empty")
+                            # Create a new file
+                            with open("crawled_links.json", "w") as f:
+                                json.dump([], f)
                         except Exception as e:
                             logger.error(f"Error checking crawled links: {str(e)}")
             except Exception as e:
@@ -590,11 +603,17 @@ def append_link(link, publisher=None, category=None, file_path="crawled_links.js
                 json.dump([], f)
 
         # Read existing links
-        with open(file_path, "r") as f:
-            try:
-                data = json.load(f)
-            except json.JSONDecodeError:
-                data = []
+        try:
+            with open(file_path, "r") as f:
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    # If JSON is invalid, create a new file with empty list
+                    logger.warning(f"{file_path} is corrupted, treating as empty")
+                    data = []
+        except Exception as e:
+            logger.error(f"Error reading {file_path}: {str(e)}")
+            data = []
 
         # Check if link is already in the file
         link_exists = False
@@ -618,10 +637,13 @@ def append_link(link, publisher=None, category=None, file_path="crawled_links.js
                 "category": category
             }
             data.append(entry)
-            with open(file_path, "w") as f:
-                json.dump(data, f, indent=4)
-            
-            return True
+            try:
+                with open(file_path, "w") as f:
+                    json.dump(data, f, indent=4)
+                return True
+            except Exception as write_error:
+                logger.error(f"Error writing to {file_path}: {str(write_error)}")
+                return False
         
         return False
 
@@ -638,11 +660,17 @@ def append_links_batch(links, publisher=None, category=None, file_path="crawled_
                 json.dump([], f)
                 
         # Read existing links
-        with open(file_path, "r") as f:
-            try:
-                data = json.load(f)
-            except json.JSONDecodeError:
-                data = []
+        try:
+            with open(file_path, "r") as f:
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    # If JSON is invalid, create a new file with empty list
+                    logger.warning(f"{file_path} is corrupted, treating as empty")
+                    data = []
+        except Exception as e:
+            logger.error(f"Error reading {file_path}: {str(e)}")
+            data = []
                 
         # Track existing URLs to avoid duplicates
         existing_urls = {item.get("url") if isinstance(item, dict) else item for item in data}
@@ -665,8 +693,12 @@ def append_links_batch(links, publisher=None, category=None, file_path="crawled_
                 
         # Save if any links were added
         if count_added > 0:
-            with open(file_path, "w") as f:
-                json.dump(data, f, indent=4)
+            try:
+                with open(file_path, "w") as f:
+                    json.dump(data, f, indent=4)
+            except Exception as write_error:
+                logger.error(f"Error writing to {file_path}: {str(write_error)}")
+                return 0
                 
         return count_added
 
@@ -1126,8 +1158,15 @@ def scrape_articles_batch():
         if not force_add and os.path.exists("crawled_links.json"):
             try:
                 with open("crawled_links.json", "r") as f:
-                    crawled_data = json.load(f)
-                    crawled_urls = {item.get("url") for item in crawled_data if isinstance(item, dict)}
+                    try:
+                        crawled_data = json.load(f)
+                        crawled_urls = {item.get("url") for item in crawled_data if isinstance(item, dict)}
+                    except json.JSONDecodeError:
+                        # If JSON is invalid, treat as empty or corrupted file
+                        logger.warning("crawled_links.json is corrupted, treating as empty")
+                        # Create a new file
+                        with open("crawled_links.json", "w") as f:
+                            json.dump([], f)
             except Exception as e:
                 logger.error(f"Error loading crawled links: {str(e)}")
         
@@ -1160,19 +1199,71 @@ def scrape_articles_batch():
                 results["processed"] += 1
                 
                 if result.get("status") == "success":
-                    results["relevant"] += 1
-                    results["relevant_articles"].append({
-                        "url": url,
-                        "title": result.get("title", ""),
-                        "summary": result.get("summary", ""),
-                        "matched_tags": result.get("matched_tags", []),
-                        "category": category
-                    })
-                    
-                    # Add to crawled_links.json for relevant articles 
-                    # that were successfully processed and added to the sheet
-                    append_link(url, publisher, category)
-                    
+                    # Try to add to Google Sheets through a separate API call
+                    try:
+                        # Format the data for adding to Google Sheets
+                        sheet_data = {
+                            "category": category,
+                            "link": url,
+                            "title": result.get("title", ""),
+                            "summary": result.get("summary", ""),
+                            "publisher": publisher,
+                            "date": datetime.today().strftime("%m/%d/%Y"),
+                            "force_add": force_add  # Pass along the force_add flag
+                        }
+                        
+                        # Call the add-link endpoint
+                        add_response = requests.post(
+                            "http://localhost:5000/add-link",
+                            json=sheet_data,
+                            headers={"Content-Type": "application/json"}
+                        )
+                        
+                        if add_response.status_code == 200:
+                            # Success - article was added to the sheet
+                            # Add to crawled_links.json only after successful addition to sheet
+                            append_link(url, publisher, category)
+                            logger.info(f"Added article to sheet and crawled_links.json: {url}")
+                            
+                            results["relevant"] += 1
+                            results["relevant_articles"].append({
+                                "url": url,
+                                "title": result.get("title", ""),
+                                "summary": result.get("summary", ""),
+                                "matched_tags": result.get("matched_tags", []),
+                                "category": category
+                            })
+                        else:
+                            # Failed to add to sheet - might be a duplicate
+                            response_data = add_response.json()
+                            error_msg = response_data.get("error", "Unknown error adding to sheet")
+                            
+                            # Check if it's a duplicate
+                            if "already exists" in error_msg:
+                                results["duplicates"] += 1
+                                results["duplicate_articles"].append({
+                                    "url": url,
+                                    "category": category,
+                                    "error": error_msg
+                                })
+                            else:
+                                # Some other error
+                                results["errors"] += 1
+                                results["error_articles"].append({
+                                    "url": url,
+                                    "error": error_msg,
+                                    "category": category
+                                })
+                            
+                    except Exception as sheet_error:
+                        logger.error(f"Error adding article to sheet: {str(sheet_error)}")
+                        results["errors"] += 1
+                        results["error_articles"].append({
+                            "url": url,
+                            "error": f"Error adding to sheet: {str(sheet_error)}",
+                            "category": category
+                        })
+                        
                 elif result.get("status") == "irrelevant":
                     results["irrelevant"] += 1
                     results["irrelevant_articles"].append({
@@ -1352,15 +1443,25 @@ def recover_unused_link():
         if not force_add:
             try:
                 with file_lock:
-                    with open("crawled_links.json", "r") as f:
-                        crawled_data = json.load(f)
-                        for item in crawled_data:
-                            if isinstance(item, dict) and item.get("url") == url:
-                                # Return as error for original UI compatibility
-                                return jsonify({
-                                    "status": "error",
-                                    "error": f"This article already exists in the Google Sheet (added under {item.get('category', 'unknown')} category)"
-                                }), 400
+                    if os.path.exists("crawled_links.json"):
+                        try:
+                            with open("crawled_links.json", "r") as f:
+                                crawled_data = json.load(f)
+                                for item in crawled_data:
+                                    if isinstance(item, dict) and item.get("url") == url:
+                                        # Return as error for original UI compatibility
+                                        return jsonify({
+                                            "status": "error",
+                                            "error": f"This article already exists in the Google Sheet (added under {item.get('category', 'unknown')} category)"
+                                        }), 400
+                        except json.JSONDecodeError:
+                            # If JSON is invalid, treat as empty or corrupted file
+                            logger.warning("crawled_links.json is corrupted, treating as empty")
+                            # Create a new file
+                            with open("crawled_links.json", "w") as f:
+                                json.dump([], f)
+                        except Exception as e:
+                            logger.error(f"Error checking crawled links: {str(e)}")
             except Exception as e:
                 logger.error(f"Error checking crawled links: {str(e)}")
         
