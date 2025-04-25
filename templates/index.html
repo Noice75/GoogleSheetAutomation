@@ -3493,7 +3493,63 @@
           // Hide editor note for errors
           document.getElementById("editorNoteContainer").style.display = "none";
           
-          showStatus("linkStatus", `Error: ${data.error || "Failed to scrape article"}`, "error");
+          // Check if it's a duplicate article error
+          if (data.error && data.error.includes("already exists")) {
+            showStatus("linkStatus", data.error, "warning");
+            
+            // Add a "Force Add" button
+            const statusDiv = document.getElementById("linkStatus");
+            const addAnywayBtn = document.createElement("button");
+            addAnywayBtn.className = "btn btn-sm btn-warning ml-2";
+            addAnywayBtn.textContent = "Add Anyway";
+            addAnywayBtn.onclick = async function() {
+              // Rescrape with force_add=true
+              try {
+                showStatus("linkStatus", "Scraping article...", "loading");
+                
+                const forceResponse = await fetch("/scrape-article", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({ 
+                    url: url,
+                    category: category,
+                    force_add: true
+                  })
+                });
+                
+                const forceData = await forceResponse.json();
+                
+                if (forceData.status === "success") {
+                  document.getElementById("title").value = forceData.title || "";
+                  document.getElementById("summary").value = forceData.summary || "";
+                  
+                  if (forceData.identified_publisher) {
+                    document.getElementById("publisher").value = forceData.identified_publisher;
+                  }
+                  
+                  if (forceData.editor_note) {
+                    document.getElementById("editorNote").textContent = forceData.editor_note;
+                    document.getElementById("editorNoteContainer").style.display = "block";
+                  }
+                  
+                  showStatus("linkStatus", "Article scraped successfully! (Duplicate override)", "success");
+                } else {
+                  showStatus("linkStatus", `Error: ${forceData.error || "Failed to scrape article"}`, "error");
+                }
+              } catch (error) {
+                showStatus("linkStatus", `Error: ${error.message}`, "error");
+              }
+            };
+            
+            // Append the button if it doesn't already exist
+            if (!statusDiv.querySelector("button")) {
+              statusDiv.appendChild(addAnywayBtn);
+            }
+          } else {
+            showStatus("linkStatus", `Error: ${data.error || "Failed to scrape article"}`, "error");
+          }
         }
       } catch (error) {
         // Hide editor note for errors
@@ -3599,6 +3655,7 @@
       const summaryInput = document.getElementById("summary");
       const categorySelect = document.getElementById("category");
       const publisherInput = document.getElementById("publisher");
+      const forceAdd = document.getElementById("forceAddFlag") ? document.getElementById("forceAddFlag").value === "true" : false;
       
       if (!linkInput.value) {
         showStatus("status", "Please enter a valid URL", "error");
@@ -3625,7 +3682,8 @@
           summary: summaryInput.value,
           date: document.getElementById("date").value,
           category: categorySelect.value,
-          publisher: publisherInput.value
+          publisher: publisherInput.value,
+          force_add: forceAdd
         };
 
         const res = await fetch("/add-link", {
@@ -3656,8 +3714,48 @@
           
           // Clear any status messages
           document.getElementById("linkStatus").className = "status hidden";
+          
+          // Remove force add flag if it exists
+          const forceAddFlag = document.getElementById("forceAddFlag");
+          if (forceAddFlag) {
+            forceAddFlag.remove();
+          }
         } else {
-          showStatus("status", `Error: ${result.error}`, "error");
+          // Check if this is a duplicate article error
+          if (result.error && result.error.includes("already exists")) {
+            showStatus("status", result.error, "warning");
+            
+            // Add a "Force Add" button if it doesn't exist
+            const statusDiv = document.getElementById("status");
+            if (!document.getElementById("addAnywayBtn")) {
+              const addAnywayBtn = document.createElement("button");
+              addAnywayBtn.id = "addAnywayBtn";
+              addAnywayBtn.className = "btn btn-sm btn-warning ml-2";
+              addAnywayBtn.textContent = "Add Anyway";
+              addAnywayBtn.onclick = function() {
+                // Add a hidden input to the form to indicate force add
+                if (!document.getElementById("forceAddFlag")) {
+                  const forceAddFlag = document.createElement("input");
+                  forceAddFlag.type = "hidden";
+                  forceAddFlag.id = "forceAddFlag";
+                  forceAddFlag.name = "forceAddFlag";
+                  forceAddFlag.value = "true";
+                  document.getElementById("linkForm").appendChild(forceAddFlag);
+                }
+                
+                // Resubmit the form
+                const submitEvent = new Event("submit");
+                document.getElementById("linkForm").dispatchEvent(submitEvent);
+                
+                // Remove the button
+                this.remove();
+              };
+              
+              statusDiv.appendChild(addAnywayBtn);
+            }
+          } else {
+            showStatus("status", `Error: ${result.error}`, "error");
+          }
         }
       } catch (error) {
         showStatus("status", `Error: ${error.message}`, "error");
