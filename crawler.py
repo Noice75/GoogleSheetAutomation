@@ -210,10 +210,18 @@ def process_links(links, category=None, publisher=None, processed_results=None):
     # Convert to list to avoid modifying the set during iteration
     links_list = list(links)
     newly_processed = 0
+    skipped_processed = 0
     
     for link in links_list:
-        # Skip if already processed (check URL in processed_results)
+        # Skip if already processed in this run (check URL in processed_results)
         if any(r.get('url') == link for r in processed_results):
+            continue
+            
+        # Check if link was already processed in previous runs
+        already_processed, source = check_already_processed(link)
+        if already_processed:
+            print(f"⏭️ Skipping already processed link (found in {source}): {link}")
+            skipped_processed += 1
             continue
             
         print(f"🔍 Processing: {link}")
@@ -228,6 +236,10 @@ def process_links(links, category=None, publisher=None, processed_results=None):
         # Add to processed results
         processed_results.append(result)
         newly_processed += 1
+        
+        # Save link to crawled_links.json immediately after processing
+        append_link(link, publisher, category)
+        print(f"💾 Saved to crawled_links.json: {link}")
         
         # If relevant, upload to Google Sheets
         if result.get('status') == 'success':
@@ -268,12 +280,131 @@ def process_links(links, category=None, publisher=None, processed_results=None):
             # Try to upload to Google Sheets
             upload_to_sheet(result)
     
+    if skipped_processed > 0:
+        print(f"⏭️ Skipped {skipped_processed} already processed links")
+    
     return newly_processed
 
 def get_base_url(url):
     parsed_url = urlparse(url)
     base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
     return base_url
+
+def check_already_processed(url):
+    """Check if the URL has already been processed in previous runs by checking both crawled_links.json and unused_links.json"""
+    try:
+        # Check crawled_links.json
+        if os.path.exists("crawled_links.json"):
+            with open("crawled_links.json", "r") as f:
+                try:
+                    data = json.load(f)
+                    # Check if URL exists in the list
+                    for item in data:
+                        if isinstance(item, dict) and item.get("url") == url:
+                            return True, "crawled_links.json"
+                        elif isinstance(item, str) and item == url:
+                            return True, "crawled_links.json"
+                except json.JSONDecodeError:
+                    print("⚠️ Error parsing crawled_links.json")
+        
+        # Check unused_links.json
+        if os.path.exists("unused_links.json"):
+            with open("unused_links.json", "r") as f:
+                try:
+                    data = json.load(f)
+                    # Check if URL exists in the list
+                    for item in data:
+                        if isinstance(item, dict) and item.get("url") == url:
+                            return True, "unused_links.json"
+                        elif isinstance(item, str) and item == url:
+                            return True, "unused_links.json"
+                except json.JSONDecodeError:
+                    print("⚠️ Error parsing unused_links.json")
+        
+        # URL not found in either file
+        return False, None
+    except Exception as e:
+        print(f"⚠️ Error checking if URL is already processed: {str(e)}")
+        return False, None
+
+def append_link(link, publisher=None, category=None, file_path="crawled_links.json"):
+    """Append a link to the crawled_links.json file with additional metadata"""
+    # Use lock to prevent concurrent writes
+    # Note: This is a simplified version without threading locks
+    # If multi-threading is added later, proper locks should be used
+    
+    # If file doesn't exist, create an empty list and file
+    if not os.path.exists(file_path):
+        with open(file_path, "w") as f:
+            json.dump([], f)
+
+    # Read existing links
+    with open(file_path, "r") as f:
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError:
+            data = []
+
+    # Check if link is already in the file
+    link_exists = False
+    for item in data:
+        if isinstance(item, dict) and item.get("url") == link:
+            link_exists = True
+            break
+        elif isinstance(item, str) and item == link:
+            # If the item is in the old format (just a string), remove it
+            data.remove(item)
+            link_exists = False
+            break
+
+    # Append if link is not already in the file
+    if not link_exists:
+        # Create a new entry with metadata
+        entry = {
+            "url": link,
+            "timestamp": datetime.now().isoformat(),
+            "publisher": publisher,
+            "category": category
+        }
+        data.append(entry)
+        with open(file_path, "w") as f:
+            json.dump(data, f, indent=4)
+        
+        return True
+    
+    return False
+
+def check_upload_success(result):
+    """Check if the article was successfully uploaded to Google Sheets by checking the sheet"""
+    try:
+        category = result.get("category", "Sheet1")
+        url = result.get("url")
+        
+        if not url:
+            return False, "No URL in result"
+        
+        # Get worksheet data
+        check_response = requests.get(
+            f"http://localhost:5000/worksheet-data?name={category}",
+            headers={"Content-Type": "application/json"}
+        )
+        
+        if check_response.status_code != 200:
+            return False, f"Failed to get worksheet data: {check_response.text}"
+            
+        data = check_response.json()
+        rows = data.get("rows", [])
+        
+        # Check if URL exists in any row
+        for row in rows:
+            # The URL might be in a HYPERLINK formula
+            if url in row[0]:
+                return True, None
+                
+        return False, "URL not found in worksheet"
+        
+    except Exception as e:
+        return False, f"Error checking upload success: {str(e)}"
 
 if __name__ == "__main__":
     import sys

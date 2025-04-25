@@ -1,233 +1,51 @@
 [
     {
-        "url": "https://www.iaps.ai/research/future-of-ai-summit-series",
-        "timestamp": "2025-04-25T17:36:23.428693",
-        "category": null,
-        "publisher": null,
-        "reason": "Missing category or text"
-    },
-    {
-        "url": "https://www.youtube.com/shorts/P3JdpX4-Obs",
-        "timestamp": "2025-04-25T17:41:01.881290",
-        "category": "NEWS",
-        "publisher": null,
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.iaps.ai/research/tag/Compute+governance",
-        "timestamp": "2025-04-25T18:28:34.299435",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.iaps.ai/research/secure-governable-chips",
-        "timestamp": "2025-04-25T18:28:36.976329",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.iaps.ai/our-team",
-        "timestamp": "2025-04-25T18:28:49.828839",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
         "url": "https://www.iaps.ai/research-tmp",
-        "timestamp": "2025-04-25T18:28:51.199252",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.iaps.ai/newsletter",
-        "timestamp": "2025-04-25T18:28:59.163758",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.iaps.ai/research/understanding-aisis",
-        "timestamp": "2025-04-25T18:29:04.457237",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.iaps.ai/ourresearch",
-        "timestamp": "2025-04-25T18:29:05.817523",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.iaps.ai/contact",
-        "timestamp": "2025-04-25T18:29:07.065168",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.iaps.ai/fellowship",
-        "timestamp": "2025-04-25T18:29:09.746148",
+        "timestamp": "2025-04-25T19:02:22.639245",
         "category": "NEWS",
         "publisher": "IAPS",
         "reason": "None of the tags ['ai governance'] found in the article"
     },
     {
         "url": "https://www.iaps.ai/",
-        "timestamp": "2025-04-25T18:29:10.999056",
+        "timestamp": "2025-04-25T19:02:31.133966",
         "category": "NEWS",
         "publisher": "IAPS",
         "reason": "None of the tags ['ai governance'] found in the article"
     },
     {
-        "url": "https://www.iaps.ai/oliver-guest",
-        "timestamp": "2025-04-25T18:29:35.011617",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.iaps.ai/news/fellowship",
-        "timestamp": "2025-04-25T18:29:36.352397",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.iaps.ai/careers",
-        "timestamp": "2025-04-25T18:29:49.119540",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.iaps.ai/governance-history-independence-funding",
-        "timestamp": "2025-04-25T18:30:02.485451",
+        "url": "https://www.iaps.ai/ourresearch",
+        "timestamp": "2025-04-25T19:02:31.700951",
         "category": "NEWS",
         "publisher": "IAPS",
         "reason": "None of the tags ['ai governance'] found in the article"
     },
     {
         "url": "https://www.iaps.ai/ourresearch2",
-        "timestamp": "2025-04-25T18:30:14.475124",
+        "timestamp": "2025-04-25T19:02:33.393484",
         "category": "NEWS",
         "publisher": "IAPS",
         "reason": "None of the tags ['ai governance'] found in the article"
     },
     {
-        "url": "https://www.iaps.ai/research/expert-in-ai-hardware",
-        "timestamp": "2025-04-25T18:30:24.494176",
+        "url": "https://www.iaps.ai/research/secure-governable-chips",
+        "timestamp": "2025-04-25T19:03:03.070127",
         "category": "NEWS",
         "publisher": "IAPS",
         "reason": "None of the tags ['ai governance'] found in the article"
     },
     {
-        "url": "https://www.iaps.ai/research/adapting-cybersecurity-frameworks",
-        "timestamp": "2025-04-25T18:30:29.987940",
+        "url": "https://www.iaps.ai/research/tag/Compute+governance",
+        "timestamp": "2025-04-25T19:04:14.457609",
         "category": "NEWS",
         "publisher": "IAPS",
         "reason": "None of the tags ['ai governance'] found in the article"
     },
     {
-        "url": "https://www.iaps.ai/research/ai-chip-smuggling-into-china",
-        "timestamp": "2025-04-25T18:30:31.458665",
+        "url": "https://www.iaps.ai/research/understanding-aisis",
+        "timestamp": "2025-04-25T19:04:16.400589",
         "category": "NEWS",
         "publisher": "IAPS",
         "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.iaps.ai/research/category/Link+Post",
-        "timestamp": "2025-04-25T18:30:41.268504",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "http://go.microsoft.com/fwlink/?LinkID=246338",
-        "timestamp": "2025-04-25T18:40:50.410804",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://go.microsoft.com/fwlink/?linkid=868922",
-        "timestamp": "2025-04-25T18:40:52.568897",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://support.microsoft.com/topic/82d20721-2d6f-4012-a13d-d1910ccf203f",
-        "timestamp": "2025-04-25T18:41:00.319815",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.msn.com/en-xl/news/other/china-s-biggest-internet-forum-to-focus-on-ai-as-beijing-seeks-greater-role-in-governance/ar-AA1sQAn5?ocid=feedsansarticle",
-        "timestamp": "2025-04-25T18:41:01.458553",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "Missing category or text"
-    },
-    {
-        "url": "http://go.microsoft.com/fwlink/?LinkId=521839",
-        "timestamp": "2025-04-25T18:41:04.411002",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.pdpc.gov.sg/-/media/files/pdpc/pdf-files/resource-for-organisation/ai/sgisago.pdf",
-        "timestamp": "2025-04-25T18:41:21.089572",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.sciencedirect.com/science/article/pii/S0740624X22000181",
-        "timestamp": "2025-04-25T18:41:23.671336",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "None of the tags ['ai governance'] found in the article"
-    },
-    {
-        "url": "https://www.msn.com/en-ph/news/other/the-4th-usaid-conference-discussed-approaches-to-ai-governance/ar-AA1rdyIk?ocid=feedsansarticle",
-        "timestamp": "2025-04-25T18:41:45.909973",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "Missing category or text"
-    },
-    {
-        "url": "https://www.msn.com/en-us/news/world/the-un-is-still-the-best-forum-to-tackle-ai-governance/ar-BB1m2eBX?ocid=feedsansarticle",
-        "timestamp": "2025-04-25T18:41:47.010944",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "Missing category or text"
-    },
-    {
-        "url": "https://www.msn.com/en-us/news/world/france-and-china-announce-joint-declaration-on-ai-governance-vow-for-closer-collaboration/ar-BB1m1xHg?ocid=feedsansarticle",
-        "timestamp": "2025-04-25T18:41:48.141614",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "Missing category or text"
-    },
-    {
-        "url": "https://www.msn.com/en-in/channel/topic/%E8%B5%84%E8%AE%AF/tp-Y_0b495ad3-9beb-45f8-9214-c8e95aa2468f?nsq=%22Ai+Governance%22+Site%3aWww.Iaps.Ai&ocid=feedsansarticle",
-        "timestamp": "2025-04-25T18:42:03.973790",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "Missing category or text"
-    },
-    {
-        "url": "https://www.msn.com/en-in/money/topstories/how-some-of-india-s-biggest-companies-deal-with-ai-governance/ar-AA1omnVT?ocid=feedsansarticle",
-        "timestamp": "2025-04-25T18:42:05.424632",
-        "category": "NEWS",
-        "publisher": "IAPS",
-        "reason": "Missing category or text"
     }
 ]

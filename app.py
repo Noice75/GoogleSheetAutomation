@@ -714,14 +714,14 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                     print(search_query)
                     logger.info(f"Searching with query: {search_query}")
                     
-                    # Run the search with category and publisher
-                    result_links, processed_results = search(
+                    # Run the search but don't auto-process (we'll do it after filtering)
+                    result_links, _ = search(
                         driver, 
                         search_query, 
                         max_pages=max_pages,
                         category=category,
                         publisher=publisher_name,
-                        auto_process=True
+                        auto_process=False  # Don't process automatically during search
                     )
                     
                     # Get the publisher's domain for validation
@@ -729,24 +729,6 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                     if publisher_domain.startswith("www."):
                         publisher_domain = publisher_domain[4:]  # Remove www. prefix if present
                     
-                    # Log the results from processing
-                    if processed_results:
-                        relevant_count = sum(1 for r in processed_results if r.get('status') == 'success')
-                        irrelevant_count = sum(1 for r in processed_results if r.get('status') == 'irrelevant')
-                        logger.info(f"Processed {len(processed_results)} links for {publisher_name} ({category})")
-                        logger.info(f"Found {relevant_count} relevant articles, {irrelevant_count} irrelevant articles")
-                        
-                        # Add to crawler status results (only the relevant ones)
-                        for result in processed_results:
-                            if result.get('status') == 'success':
-                                crawler_status["results"].append({
-                                    "url": result.get('url'),
-                                    "title": result.get('title', ''),
-                                    "publisher": publisher_name,
-                                    "category": category
-                                })
-                    
-                    # Still store valid links in crawled_links.json for record-keeping
                     # Filter links to ensure they're from the correct domain
                     valid_links = []
                     for link in result_links:
@@ -763,10 +745,65 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                         except Exception as e:
                             logger.error(f"Error validating URL {link}: {str(e)}")
                     
-                    # Append valid links in batch for better performance
-                    if valid_links:
-                        count_added = append_links_batch(valid_links, publisher_name, category)
-                        logger.info(f"Added {count_added} new links for {publisher_name} ({category})")
+                    # Check which links have already been processed previously
+                    new_links = []
+                    
+                    # Load existing crawled links
+                    crawled_links = []
+                    if os.path.exists("crawled_links.json"):
+                        try:
+                            with open("crawled_links.json", "r") as f:
+                                crawled_data = json.load(f)
+                                crawled_links = [item.get("url") if isinstance(item, dict) else item for item in crawled_data]
+                        except Exception as e:
+                            logger.error(f"Error loading crawled links: {str(e)}")
+                    
+                    # Load unused links
+                    unused_links = []
+                    if os.path.exists("unused_links.json"):
+                        try:
+                            with open("unused_links.json", "r") as f:
+                                unused_data = json.load(f)
+                                unused_links = [item.get("url") if isinstance(item, dict) else item for item in unused_data]
+                        except Exception as e:
+                            logger.error(f"Error loading unused links: {str(e)}")
+                    
+                    # All previously processed links
+                    all_processed_links = set(crawled_links + unused_links)
+                    
+                    # Filter out already processed links
+                    for link in valid_links:
+                        if link not in all_processed_links:
+                            new_links.append(link)
+                        else:
+                            logger.info(f"Skipping already processed link: {link}")
+                    
+                    logger.info(f"Found {len(valid_links)} valid links, {len(new_links)} are new")
+                    
+                    # Process the new links through article processor
+                    processed_results = []
+                    if new_links:
+                        # Import process_links function from crawler
+                        from crawler import process_links
+                        
+                        # Process the links
+                        process_links(new_links, category, publisher_name, processed_results)
+                        
+                        # Log the results from processing
+                        relevant_count = sum(1 for r in processed_results if r.get('status') == 'success')
+                        irrelevant_count = sum(1 for r in processed_results if r.get('status') == 'irrelevant')
+                        logger.info(f"Processed {len(processed_results)} links for {publisher_name} ({category})")
+                        logger.info(f"Found {relevant_count} relevant articles, {irrelevant_count} irrelevant articles")
+                        
+                        # Add to crawler status results (only the relevant ones)
+                        for result in processed_results:
+                            if result.get('status') == 'success':
+                                crawler_status["results"].append({
+                                    "url": result.get('url'),
+                                    "title": result.get('title', ''),
+                                    "publisher": publisher_name,
+                                    "category": category
+                                })
                     
                     # Log completion of this publisher
                     logger.info(f"Completed search for {publisher_name} ({category})")
