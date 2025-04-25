@@ -14,6 +14,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from article_processor import scrape_and_check_article
 
+# This crawler works with the article_processor.py module, which uses newspaper3k
+# for extracting article content, metadata, and creating summaries.
+# It handles collecting links, processing articles, and uploading to Google Sheets.
+
 # Google Sheets Integration
 def load_config():
     """Load the sheet ID from config.json"""
@@ -40,6 +44,35 @@ def upload_to_sheet(result):
             category = "Sheet1"
             
         publisher = result.get("publisher", "")
+        
+        # Extract metadata from newspaper3k if available
+        metadata = result.get("metadata", {})
+        authors = ", ".join(metadata.get("authors", [])) if metadata.get("authors") else ""
+        publish_date = metadata.get("publish_date", "")
+        keywords = ", ".join(metadata.get("keywords", [])) if metadata.get("keywords") else ""
+        
+        # Format the date properly to remove time portion if it exists
+        if publish_date:
+            try:
+                # Check if publish_date is a string and contains a date
+                if isinstance(publish_date, str) and publish_date.strip():
+                    # Try to parse the date string to a datetime object
+                    if "T" in publish_date:  # ISO format with T separator
+                        date_obj = datetime.fromisoformat(publish_date.replace('Z', '+00:00'))
+                    elif " " in publish_date:  # Format with space separator
+                        date_parts = publish_date.split(' ')[0]  # Get just the date part
+                        date_obj = datetime.strptime(date_parts, "%Y-%m-%d")
+                    else:
+                        date_obj = datetime.strptime(publish_date.split('T')[0], "%Y-%m-%d")
+                    
+                    # Format to just the date portion as MM/DD/YYYY
+                    publish_date = date_obj.strftime("%m/%d/%Y")
+            except Exception as e:
+                print(f"⚠️ Error formatting date {publish_date}: {str(e)}")
+                publish_date = ""  # Reset if parsing fails
+        
+        # Use published date from metadata if available, otherwise use current date
+        date_to_use = publish_date if publish_date else datetime.today().strftime("%m/%d/%Y")
             
         data = {
             "category": category,  # Category name is used as worksheet name
@@ -47,7 +80,9 @@ def upload_to_sheet(result):
             "title": result["title"],
             "summary": result["summary"],
             "publisher": publisher,
-            "date": datetime.today().strftime("%m/%d/%Y")
+            "date": date_to_use,
+            "authors": authors,
+            "keywords": keywords
         }
         
         # Send to Flask API endpoint
@@ -238,7 +273,7 @@ def process_links(links, category=None, publisher=None, processed_results=None):
         newly_processed += 1
         
         # Save link to crawled_links.json immediately after processing
-        append_link(link, publisher, category)
+        append_link(link, publisher, category, result.get('metadata'))
         print(f"💾 Saved to crawled_links.json: {link}")
         
         # If relevant, upload to Google Sheets
@@ -250,6 +285,13 @@ def process_links(links, category=None, publisher=None, processed_results=None):
                 result['category'] = category
             if publisher and 'publisher' not in result:
                 result['publisher'] = publisher
+                
+            # Log metadata if available
+            if 'metadata' in result and result['metadata']:
+                metadata = result['metadata']
+                authors_str = ", ".join(metadata.get("authors", [])) if metadata.get("authors") else "Unknown"
+                publish_date = metadata.get("publish_date", "Unknown")
+                print(f"📝 Article metadata: Authors: {authors_str}, Published: {publish_date}")
                 
             # Try to verify worksheet exists and create it if needed before uploading
             try:
@@ -327,7 +369,7 @@ def check_already_processed(url):
         print(f"⚠️ Error checking if URL is already processed: {str(e)}")
         return False, None
 
-def append_link(link, publisher=None, category=None, file_path="crawled_links.json"):
+def append_link(link, publisher=None, category=None, metadata=None, file_path="crawled_links.json"):
     """Append a link to the crawled_links.json file with additional metadata"""
     # Use lock to prevent concurrent writes
     # Note: This is a simplified version without threading locks
@@ -366,6 +408,11 @@ def append_link(link, publisher=None, category=None, file_path="crawled_links.js
             "publisher": publisher,
             "category": category
         }
+        
+        # Add any provided metadata
+        if metadata:
+            entry["metadata"] = metadata
+            
         data.append(entry)
         with open(file_path, "w") as f:
             json.dump(data, f, indent=4)

@@ -1,5 +1,5 @@
 import requests
-from newspaper import Article
+from newspaper import Article, Config
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 import json
@@ -227,53 +227,54 @@ class ArticleProcessor:
         return True
     
     def extract_article_content(self, url):
-        """Extract article content using multiple methods and fallbacks"""
+        """Extract article content using newspaper3k"""
         if not url:
             return None, None, "URL is required"
             
-        # First try with newspaper3k
         try:
-            article = Article(url)
+            # Configure newspaper with better settings
+            config = Config()
+            config.browser_user_agent = UserAgent().random
+            config.request_timeout = 15
+            config.memoize_articles = False  # Disable caching for fresh results
+            
+            # Create article with the custom config
+            article = Article(url, config=config)
             article.download()
             article.parse()
             
-            if article.text:
-                return article.title, article.text, None
-        except Exception as e:
-            logger.warning(f"Initial scraping attempt failed: {str(e)}")
-            # Continue to fallback method
-        
-        # Fallback method with user agent and BeautifulSoup
-        try:
-            ua = UserAgent()
-            headers = {
-                'User-Agent': ua.random,
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1',
+            # Check if we got meaningful content
+            if not article.text or len(article.text.strip()) < 20:
+                raise ValueError("Not enough content extracted")
+                
+            # Try to get article metadata
+            try:
+                article.nlp()
+            except Exception as nlp_err:
+                logger.warning(f"Error performing NLP on article: {str(nlp_err)}")
+            
+            # Get the publish date if available
+            publish_date = None
+            if article.publish_date:
+                publish_date = article.publish_date.isoformat()
+            
+            # Extract and save article metadata
+            metadata = {
+                "authors": article.authors,
+                "publish_date": publish_date,
+                "top_image": article.top_image,
+                "keywords": article.keywords if hasattr(article, 'keywords') else [],
+                "summary": article.summary if hasattr(article, 'summary') else ""
             }
             
-            # Try direct requests with BeautifulSoup
-            response = requests.get(url, headers=headers)
-            soup = BeautifulSoup(response.text, 'html.parser')
+            # Log successful extraction
+            logger.info(f"Successfully extracted article from {url} using newspaper3k")
             
-            # Try to get title
-            title = soup.title.string if soup.title else "No title found"
+            return article.title, article.text, None
             
-            # Try to get main content
-            main_content = soup.find('main') or soup.find('article') or soup.find('div', class_='content')
-            if main_content:
-                text = main_content.get_text(strip=True)
-            else:
-                # Fallback to body text
-                text = soup.body.get_text(strip=True) if soup.body else "No content found"
-            
-            return title, text, None
-            
-        except Exception as fallback_error:
-            logger.error(f"Fallback scraping failed: {str(fallback_error)}")
-            return None, None, f"Could not scrape the article: {str(fallback_error)}"
+        except Exception as e:
+            logger.error(f"Article extraction failed: {str(e)}")
+            return None, None, f"Could not extract the article: {str(e)}"
     
     def _sentence_similarity(self, sent1, sent2, stopwords=None):
         """Calculate similarity between two sentences using word vectors"""
@@ -325,12 +326,20 @@ class ArticleProcessor:
     
     def summarize_article(self, text, max_sentences=2, fallback_max_length=150):
         """
-        Create a concise summary that explains what the article is about,
-        rather than just condensing it. This is optimized for newsletter format.
+        Create a very concise summary that attracts readers - just 2-3 lines maximum.
+        Focuses on the key points rather than details.
+        
+        First tries using newspaper3k's built-in summarization if we have a URL,
+        then falls back to TextRank if that fails.
         """
         if not text:
             return ""
         
+        # Define stricter character limits for a shorter, more attractive summary
+        # 200 chars is approximately 2-3 lines
+        strict_max_char_limit = 200
+        
+        # TextRank summarization
         try:
             # Get stopwords
             try:
@@ -346,18 +355,19 @@ class ArticleProcessor:
             if not sentences or len(sentences) <= 1:
                 logger.warning("Could not extract sentences from text, using truncation")
                 # Much shorter summary for newsletter format
-                return text[:fallback_max_length] + "..." if len(text) > fallback_max_length else text
+                return text[:strict_max_char_limit] + "..." if len(text) > strict_max_char_limit else text
                     
             # If there are very few sentences, just return them all or truncate them
             if len(sentences) <= max_sentences:
                 combined = ' '.join(sentences)
-                if len(combined) > fallback_max_length:
-                    return combined[:fallback_max_length] + "..."
+                if len(combined) > strict_max_char_limit:
+                    # Truncate to strict limit and add ellipsis
+                    return combined[:strict_max_char_limit] + "..."
                 return combined
             
             # Extract key sentences focusing on the beginning of the article
             # which typically contains the main point/topic
-            intro_weight = 2.0  # Give more weight to introductory sentences
+            intro_weight = 2.5  # Give more weight to introductory sentences for a "hook"
             
             # Build similarity matrix
             sentence_similarity_matrix = self._build_similarity_matrix(sentences, stop_words)
@@ -365,8 +375,9 @@ class ArticleProcessor:
             # Rank sentences using PageRank algorithm with bias toward early sentences
             nx_graph = nx.from_numpy_array(sentence_similarity_matrix)
             
-            # Add bias for early sentences (first 20% of the article)
-            initial_sentences = max(2, int(len(sentences) * 0.2))
+            # Add bias for early sentences (first 15% of the article)
+            # More focused on the very beginning for a hook
+            initial_sentences = max(1, int(len(sentences) * 0.15))
             personalization = {}
             for i in range(len(sentences)):
                 if i < initial_sentences:
@@ -380,7 +391,8 @@ class ArticleProcessor:
             # Sort sentences by score and select top ones
             ranked_sentences = sorted(((scores[i], i, s) for i, s in enumerate(sentences)), reverse=True)
             
-            # Get the top N sentences
+            # Get the top N sentences (limited to just 1-2 for brevity)
+            max_sentences = min(max_sentences, 2)  # Limit to 1-2 sentences max
             top_sentence_indices = [ranked_sentences[i][1] for i in range(min(max_sentences, len(ranked_sentences)))]
             
             # Sort the selected sentences by their position in the original text
@@ -390,18 +402,18 @@ class ArticleProcessor:
             # Join the selected sentences
             summary = ' '.join([sentences[i] for i in top_sentence_indices])
             
-            # If the summary is still too long, truncate it for newsletter format
-            if len(summary) > fallback_max_length:
-                return summary[:fallback_max_length] + "..."
+            # Always enforce the strict character limit
+            if len(summary) > strict_max_char_limit:
+                return summary[:strict_max_char_limit] + "..."
                 
             return summary
             
         except Exception as e:
             logger.warning(f"Error in article summarization: {str(e)}. Falling back to simple truncation.")
             # Fallback to simple truncation if summarization fails
-            # Keep it short for newsletter format
-            if len(text) > fallback_max_length:
-                return text[:fallback_max_length] + "..."
+            # Keep it very short
+            if len(text) > strict_max_char_limit:
+                return text[:strict_max_char_limit] + "..."
             return text
     
     def check_article_relevance(self, category, text):
@@ -485,8 +497,45 @@ class ArticleProcessor:
                 "identified_publisher": identified_publisher
             }
             
-        # Create summary
-        summary = self.summarize_article(text)
+        # Define strict character limit for summary (2-3 lines)
+        strict_max_char_limit = 200
+            
+        # Use newspaper3k's summary if available, otherwise generate our own
+        try:
+            # Create article with configuration
+            config = Config()
+            config.browser_user_agent = UserAgent().random
+            config.request_timeout = 15
+            
+            article = Article(url, config=config)
+            article.download()
+            article.parse()
+            article.nlp()  # Extract keywords, summary, etc.
+            
+            # Use newspaper3k summary if available, but ensure it's very short
+            if hasattr(article, 'summary') and article.summary and len(article.summary) > 50:
+                # Truncate to ensure it's only 2-3 lines
+                if len(article.summary) > strict_max_char_limit:
+                    summary = article.summary[:strict_max_char_limit] + "..."
+                else:
+                    summary = article.summary
+            else:
+                # Fallback to our custom summarization which is already configured for brevity
+                summary = self.summarize_article(text)
+                
+            # Get metadata
+            metadata = {
+                "authors": article.authors,
+                "publish_date": article.publish_date.isoformat() if article.publish_date else None,
+                "top_image": article.top_image,
+                "keywords": article.keywords if hasattr(article, 'keywords') else []
+            }
+            
+        except Exception as e:
+            logger.warning(f"Error using newspaper3k for summary: {str(e)}. Using fallback.")
+            # Fallback if newspaper3k processing fails
+            summary = self.summarize_article(text)
+            metadata = {}
         
         return {
             "status": "success",
@@ -496,11 +545,22 @@ class ArticleProcessor:
             "matched_tags": relevance_info if isinstance(relevance_info, list) else None,
             "url": url,
             "publisher": publisher,
-            "identified_publisher": identified_publisher
+            "identified_publisher": identified_publisher,
+            "metadata": metadata  # Include the newspaper3k metadata
         }
 
 # Standalone function for app.py to use
 def scrape_and_check_article(url, category=None, publisher=None):
-    """Function for external use to process an article"""
+    """
+    Function for external use to process an article using newspaper3k
+    
+    Args:
+        url (str): The URL of the article to process
+        category (str, optional): The category of the article
+        publisher (str, optional): The publisher of the article
+        
+    Returns:
+        dict: The processed article with status, title, summary, etc.
+    """
     processor = ArticleProcessor()
     return processor.process_article(url, category, publisher) 
