@@ -1,6 +1,125 @@
-# AI Governance Resource Manager
+# GSheet Auto - Article Processor and Organizer
 
-A web application for managing and organizing AI governance resources in Google Sheets. This tool helps you collect, categorize, and manage AI-related articles, papers, and resources efficiently.
+A web application that processes news articles, checks their relevance based on category tags, and organizes them into Google Sheets. The system includes a crawler for finding relevant articles and a sophisticated article processor for extracting and summarizing content.
+
+## Features
+
+- **Article Processing**: Extract and summarize content from news articles using TextRank algorithm
+- **Content Relevance Checking**: Verify if articles contain keywords relevant to specific categories
+- **Google Sheets Integration**: Store relevant articles in categorized sheets
+- **Web Crawler**: Find articles from defined publishers related to specific topics
+- **Unused Article Management**: Track and manage articles that don't match relevance criteria
+
+## Setup
+
+1. Clone the repository
+2. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+3. Place your Google Sheets API credentials in a file named `credentials.json`
+4. Run the application:
+   ```
+   python app.py
+   ```
+
+## API Endpoints
+
+### Article Processing
+
+- `POST /scrape-article` - Extract and process a single article
+  ```json
+  {
+    "url": "https://example.com/article",
+    "category": "AI Policy",
+    "publisher": "Example Publisher"
+  }
+  ```
+
+- `POST /scrape-articles-batch` - Process multiple articles at once
+  ```json
+  {
+    "articles": [
+      {
+        "url": "https://example.com/article1",
+        "category": "AI Policy",
+        "publisher": "Example Publisher"
+      },
+      {
+        "url": "https://example.com/article2",
+        "category": "AI Governance",
+        "publisher": "Another Publisher"
+      }
+    ]
+  }
+  ```
+
+### Unused Links Management
+
+- `GET /unused-links` - Get all links that didn't match category tags
+- `DELETE /unused-links` - Delete unused links based on filters
+  ```json
+  {
+    "category": "AI Policy",
+    "publisher": "Example Publisher",
+    "before_date": "2023-01-01T00:00:00",
+    "all": false
+  }
+  ```
+- `POST /unused-links/recover` - Recover an unused link and add it to Google Sheets
+  ```json
+  {
+    "url": "https://example.com/article",
+    "category": "AI Policy",
+    "summary": "Optional custom summary",
+    "title": "Optional custom title"
+  }
+  ```
+
+### Google Sheets Management
+
+- `GET /worksheets` - List all worksheets
+- `POST /create-worksheet` - Create a new worksheet
+- `POST /delete-worksheet` - Delete a worksheet
+- `POST /add-link` - Add a link to a worksheet
+- `GET /worksheet-data?name=SheetName` - Get data from a specific worksheet
+
+### Crawler Settings
+
+- `GET /crawler-settings` - Get crawler settings
+- `POST /crawler-settings` - Add or update a publisher
+- `DELETE /crawler-settings/{category}/{publisher}` - Remove a publisher
+- `GET /crawler-settings/tags/{category}` - Get tags for a category
+- `PUT /crawler-settings/tags/{category}` - Update tags for a category
+
+## How It Works
+
+### Article Processing
+
+The system extracts content from articles using two methods:
+1. **Primary method**: Uses newspaper3k to parse article content
+2. **Fallback method**: Uses BeautifulSoup with randomized user agents
+
+After extraction, the article is summarized using the TextRank algorithm, which:
+1. Breaks text into sentences
+2. Creates a similarity matrix between sentences
+3. Uses PageRank to identify the most important sentences
+4. Assembles top sentences into a coherent summary
+
+### Relevance Checking
+
+For each article:
+1. The system loads tags associated with the article's category
+2. Checks if any tags are present in the article text
+3. If matching tags are found, the article is considered relevant
+4. Relevant articles are added to Google Sheets, while irrelevant ones are saved to `unused_links.json`
+
+## Configuration
+
+- `crawler_settings.json`: Contains publisher information and category tags
+- `config.json`: Contains the Google Sheet ID
+- `crawled_links.json`: Stores links found by the crawler
+- `unused_links.json`: Stores links that didn't match relevance criteria
 
 ## 🌟 Features Overview
 

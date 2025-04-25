@@ -5,16 +5,29 @@ from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import os
 import logging
-from newspaper import Article
-import requests
-from bs4 import BeautifulSoup
-from fake_useragent import UserAgent
-import time
-import random
 import json
 import threading
 from urllib.parse import urlparse
 from crawler import setup_driver, search, get_base_url
+from article_processor import scrape_and_check_article
+import nltk
+
+# Pre-download NLTK resources
+def download_nltk_resources():
+    nltk_data_dir = os.path.join(os.path.expanduser('~'), 'nltk_data')
+    if not os.path.exists(nltk_data_dir):
+        os.makedirs(nltk_data_dir)
+    
+    print("Downloading NLTK resources...")
+    nltk.download('punkt', download_dir=nltk_data_dir)
+    nltk.download('stopwords', download_dir=nltk_data_dir)
+    print("NLTK resources downloaded successfully")
+
+# Try to download resources at startup
+try:
+    download_nltk_resources()
+except Exception as e:
+    print(f"Error downloading NLTK resources: {str(e)}")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
@@ -200,6 +213,7 @@ def add_link():
         summary = data.get("summary", "")
         date = data.get("date", datetime.today().strftime("%m/%d/%Y"))
         title = data.get("title", "")  # Get the title from the request
+        publisher = data.get("publisher")  # Get publisher if provided
         
         if not tab_name or not link:
             return jsonify({"error": "Worksheet name and link are required"}), 400
@@ -216,8 +230,12 @@ def add_link():
         # Create HYPERLINK formula
         hyperlink_formula = f'=HYPERLINK("{link}", "{title}")'
         
-        # Add the data row with HYPERLINK formula using USER_ENTERED
-        worksheet.append_row([hyperlink_formula, summary, date], value_input_option="USER_ENTERED")
+        # Add the data row with HYPERLINK formula, placing Publisher before Date
+        # Use empty string if publisher is None
+        publisher_value = publisher if publisher else ""
+        print(publisher_value)
+        worksheet.append_row([hyperlink_formula, summary, publisher_value, date], value_input_option="USER_ENTERED")
+            
         logger.info(f"Added link to worksheet '{tab_name}': {link[:50]}...")
         return jsonify({"status": "success"}), 200
     except Exception as e:
@@ -233,8 +251,8 @@ def reset_sheet():
         worksheet = sheet.worksheet("Sheet1")
         # Clear the sheet
         worksheet.clear()
-        # Add headers
-        worksheet.append_row(["Link", "Summary", "Date"])
+        # Add headers with Publisher before Date
+        worksheet.append_row(["Link", "Summary", "Publisher", "Date"])
         logger.info("Reset Sheet1 with headers")
         return jsonify({"status": "Sheet reset with headers"}), 200
     except Exception as e:
@@ -297,8 +315,8 @@ def create_worksheet():
         # Create new worksheet
         new_worksheet = sheet.add_worksheet(title=new_title, rows=1, cols=4)
         
-        # Add headers to new worksheet
-        new_worksheet.append_row(["Link", "Summary", "Date"])
+        # Add headers to new worksheet with Publisher before Date
+        new_worksheet.append_row(["Link", "Summary", "Publisher", "Date"])
         
         logger.info(f"Created new worksheet: '{new_title}'")
         return jsonify({"status": "success", "message": f"Worksheet '{new_title}' created"}), 201
@@ -359,61 +377,50 @@ def scrape_article():
     try:
         data = request.json
         url = data.get('url')
+        category = data.get('category', None)  # Optional category
+        publisher = data.get('publisher', None)  # Optional publisher
         
         if not url:
             return jsonify({"error": "URL is required"}), 400
-            
-        # First try with simple newspaper approach
-        try:
-            article = Article(url)
-            article.download()
-            article.parse()
-            
-            if article.text:
-                return jsonify({
-                    "status": "success",
-                    "title": article.title,
-                    "summary": article.text[:500] + "..."
-                }), 200
-        except Exception as e:
-            logger.warning(f"Initial scraping attempt failed: {str(e)}")
-            # Continue to fallback method if first attempt fails
         
-        # If first attempt fails, try with user agent and fallback methods
-        try:
-            ua = UserAgent()
-            headers = {
-                'User-Agent': ua.random,
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1',
-            }
+        # Use the new article processor module
+        result = scrape_and_check_article(url, category, publisher)
+        
+        if result.get("status") == "error":
+            return jsonify(result), 500
+        elif result.get("status") == "irrelevant":
+            return jsonify({
+                "status": "irrelevant",
+                "title": result.get("title", ""),
+                "reason": result.get("reason", "No matching tags found"),
+                "url": url,
+                "publisher": result.get("publisher"),
+                "identified_publisher": result.get("identified_publisher")
+            }), 200
+        else:
+            # Format the summary specifically for newsletter use
+            summary = result.get("summary", "")
             
-            # Try direct requests with BeautifulSoup
-            response = requests.get(url, headers=headers)
-            soup = BeautifulSoup(response.text, 'html.parser')
+            # Add prompt for editor to improve the summary if needed
+            editor_note = "EDITOR NOTE: This is an auto-generated summary. Consider editing to ensure it captures the main point of the article for newsletter readers."
             
-            # Try to get title
-            title = soup.title.string if soup.title else "No title found"
-            
-            # Try to get main content
-            main_content = soup.find('main') or soup.find('article') or soup.find('div', class_='content')
-            if main_content:
-                text = main_content.get_text(strip=True)
-            else:
-                # Fallback to body text
-                text = soup.body.get_text(strip=True) if soup.body else "No content found"
+            # Add tags or matched terms if available
+            matched_tags = result.get("matched_tags", [])
+            if matched_tags and isinstance(matched_tags, list):
+                tags_info = f"Topics: {', '.join(matched_tags)}"
+                # Only append tags if summary isn't already too long
+                if len(summary) < 120:
+                    summary = f"{summary}\n\n{tags_info}"
             
             return jsonify({
                 "status": "success",
-                "title": title,
-                "summary": text[:500] + "..."
+                "title": result.get("title", ""),
+                "summary": summary,
+                "editor_note": editor_note,
+                "matched_tags": matched_tags,
+                "publisher": result.get("publisher"),
+                "identified_publisher": result.get("identified_publisher")
             }), 200
-            
-        except Exception as fallback_error:
-            logger.error(f"Fallback scraping failed: {str(fallback_error)}")
-            return jsonify({"error": "Could not scrape the article. The website might be blocking automated access."}), 500
                 
     except Exception as e:
         logger.error(f"Error scraping article: {str(e)}")
@@ -707,18 +714,42 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                     print(search_query)
                     logger.info(f"Searching with query: {search_query}")
                     
-                    # Run the search
-                    result_links = search(driver, search_query, max_pages=max_pages)
+                    # Run the search with category and publisher
+                    result_links, processed_results = search(
+                        driver, 
+                        search_query, 
+                        max_pages=max_pages,
+                        category=category,
+                        publisher=publisher_name,
+                        auto_process=True
+                    )
                     
                     # Get the publisher's domain for validation
                     publisher_domain = base_url.replace("https://", "").replace("http://", "").strip("/")
                     if publisher_domain.startswith("www."):
                         publisher_domain = publisher_domain[4:]  # Remove www. prefix if present
                     
-                    # Process results and append to crawler_status and JSON file immediately
+                    # Log the results from processing
+                    if processed_results:
+                        relevant_count = sum(1 for r in processed_results if r.get('status') == 'success')
+                        irrelevant_count = sum(1 for r in processed_results if r.get('status') == 'irrelevant')
+                        logger.info(f"Processed {len(processed_results)} links for {publisher_name} ({category})")
+                        logger.info(f"Found {relevant_count} relevant articles, {irrelevant_count} irrelevant articles")
+                        
+                        # Add to crawler status results (only the relevant ones)
+                        for result in processed_results:
+                            if result.get('status') == 'success':
+                                crawler_status["results"].append({
+                                    "url": result.get('url'),
+                                    "title": result.get('title', ''),
+                                    "publisher": publisher_name,
+                                    "category": category
+                                })
+                    
+                    # Still store valid links in crawled_links.json for record-keeping
+                    # Filter links to ensure they're from the correct domain
                     valid_links = []
                     for link in result_links:
-                        # Check if the result URL contains the publisher's domain
                         try:
                             result_domain = link.replace("https://", "").replace("http://", "").split("/")[0]
                             if result_domain.startswith("www."):
@@ -726,13 +757,6 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                             
                             # Only add the result if it's from the publisher's domain
                             if publisher_domain in result_domain:
-                                # Add to crawler status results
-                                crawler_status["results"].append({
-                                    "url": link,
-                                    "publisher": publisher_name,
-                                    "category": category
-                                })
-                                # Add to batch
                                 valid_links.append(link)
                             else:
                                 logger.info(f"Skipping {link} - not from {publisher_domain}")
@@ -998,6 +1022,310 @@ def get_link_stats():
         return jsonify({"status": "success", "stats": stats}), 200
     except Exception as e:
         logger.error(f"Error getting link statistics: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/scrape-articles-batch', methods=['POST'])
+def scrape_articles_batch():
+    """Process multiple articles at once"""
+    try:
+        data = request.json
+        articles = data.get('articles', [])
+        
+        if not articles or not isinstance(articles, list):
+            return jsonify({"error": "A list of articles is required"}), 400
+        
+        results = {
+            "processed": 0,
+            "relevant": 0,
+            "irrelevant": 0,
+            "errors": 0,
+            "relevant_articles": [],
+            "irrelevant_articles": [],
+            "error_articles": []
+        }
+        
+        for article in articles:
+            url = article.get('url')
+            category = article.get('category')
+            publisher = article.get('publisher')
+            
+            if not url or not category:
+                results["errors"] += 1
+                results["error_articles"].append({
+                    "url": url,
+                    "error": "URL and category are required for each article"
+                })
+                continue
+            
+            # Process the article
+            try:
+                result = scrape_and_check_article(url, category, publisher)
+                results["processed"] += 1
+                
+                if result.get("status") == "success":
+                    results["relevant"] += 1
+                    results["relevant_articles"].append({
+                        "url": url,
+                        "title": result.get("title", ""),
+                        "summary": result.get("summary", ""),
+                        "matched_tags": result.get("matched_tags", []),
+                        "category": category
+                    })
+                elif result.get("status") == "irrelevant":
+                    results["irrelevant"] += 1
+                    results["irrelevant_articles"].append({
+                        "url": url,
+                        "title": result.get("title", ""),
+                        "reason": result.get("reason", ""),
+                        "category": category
+                    })
+                else:
+                    results["errors"] += 1
+                    results["error_articles"].append({
+                        "url": url,
+                        "error": result.get("error", "Unknown error"),
+                        "category": category
+                    })
+            except Exception as article_error:
+                results["errors"] += 1
+                results["error_articles"].append({
+                    "url": url,
+                    "error": str(article_error),
+                    "category": category
+                })
+        
+        return jsonify({"status": "success", "results": results}), 200
+    except Exception as e:
+        logger.error(f"Error processing batch of articles: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/unused-links', methods=['GET'])
+def get_unused_links():
+    """Get all unused links (links that didn't match category tags)"""
+    try:
+        file_path = "unused_links.json"
+        if not os.path.exists(file_path):
+            return jsonify({"status": "success", "links": []}), 200
+            
+        with open(file_path, "r") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                data = []
+        
+        # Calculate some statistics
+        total_links = len(data)
+        by_category = {}
+        by_reason = {}
+        
+        for item in data:
+            if isinstance(item, dict):
+                category = item.get("category")
+                reason = item.get("reason")
+                
+                if category:
+                    by_category[category] = by_category.get(category, 0) + 1
+                    
+                if reason:
+                    # Simplify reason for stats (take first 50 chars)
+                    short_reason = reason[:50] + ("..." if len(reason) > 50 else "")
+                    by_reason[short_reason] = by_reason.get(short_reason, 0) + 1
+        
+        stats = {
+            "total": total_links,
+            "by_category": by_category,
+            "by_reason": by_reason
+        }
+        
+        return jsonify({
+            "status": "success", 
+            "links": data,
+            "stats": stats
+        }), 200
+    except Exception as e:
+        logger.error(f"Error getting unused links: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/unused-links', methods=['DELETE'])
+def delete_unused_links():
+    """Delete unused links based on various filters"""
+    try:
+        data = request.json
+        category = data.get('category')
+        publisher = data.get('publisher')
+        before_date = data.get('before_date')
+        all_links = data.get('all', False)
+        
+        file_path = "unused_links.json"
+        if not os.path.exists(file_path):
+            return jsonify({"status": "success", "deleted": 0}), 200
+            
+        with open(file_path, "r") as f:
+            try:
+                links = json.load(f)
+            except json.JSONDecodeError:
+                links = []
+        
+        # If no links or no filters specified and not deleting all, return
+        if not links or (not category and not publisher and not before_date and not all_links):
+            return jsonify({"status": "error", "error": "No filter specified"}), 400
+        
+        # Convert before_date to datetime if provided
+        before_datetime = None
+        if before_date:
+            try:
+                before_datetime = datetime.fromisoformat(before_date)
+            except ValueError:
+                return jsonify({"status": "error", "error": "Invalid date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)"}), 400
+        
+        # Filter links to keep
+        original_count = len(links)
+        links_to_keep = []
+        
+        for link in links:
+            # Skip if not a dict (shouldn't happen but just in case)
+            if not isinstance(link, dict):
+                continue
+                
+            # If deleting all links, don't keep any
+            if all_links:
+                continue
+                
+            # Check if link matches any filter
+            matches_filter = False
+            
+            # Check category filter
+            if category and link.get("category") == category:
+                matches_filter = True
+                
+            # Check publisher filter
+            if publisher and link.get("publisher") == publisher:
+                matches_filter = True
+                
+            # Check date filter
+            if before_datetime and link.get("timestamp"):
+                try:
+                    link_datetime = datetime.fromisoformat(link.get("timestamp"))
+                    if link_datetime < before_datetime:
+                        matches_filter = True
+                except ValueError:
+                    # If timestamp is invalid, ignore this filter
+                    pass
+            
+            # Keep link if it doesn't match any filter
+            if not matches_filter:
+                links_to_keep.append(link)
+        
+        # Calculate how many were deleted
+        deleted_count = original_count - len(links_to_keep)
+        
+        # Save the filtered links
+        with open(file_path, "w") as f:
+            json.dump(links_to_keep, f, indent=4)
+            
+        return jsonify({
+            "status": "success", 
+            "deleted": deleted_count,
+            "remaining": len(links_to_keep)
+        }), 200
+    except Exception as e:
+        logger.error(f"Error deleting unused links: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/unused-links/recover', methods=['POST'])
+def recover_unused_link():
+    """Recover an unused link and add it to Google Sheets"""
+    try:
+        data = request.json
+        url = data.get('url')
+        category = data.get('category')
+        summary = data.get('summary')
+        title = data.get('title')
+        
+        if not url or not category:
+            return jsonify({"status": "error", "error": "URL and category are required"}), 400
+        
+        # Find the link in the unused_links.json file
+        file_path = "unused_links.json"
+        if not os.path.exists(file_path):
+            return jsonify({"status": "error", "error": "Unused links file not found"}), 404
+            
+        with open(file_path, "r") as f:
+            try:
+                links = json.load(f)
+            except json.JSONDecodeError:
+                links = []
+        
+        # Find the link
+        link_index = None
+        link_data = None
+        
+        for i, link in enumerate(links):
+            if isinstance(link, dict) and link.get("url") == url:
+                link_index = i
+                link_data = link
+                break
+        
+        if link_index is None:
+            return jsonify({"status": "error", "error": "Link not found in unused links"}), 404
+        
+        # If no title or summary provided, use the ones from the link data
+        if not title and link_data.get("title"):
+            title = link_data.get("title")
+        
+        if not summary:
+            # If no summary provided, try to scrape the article again
+            try:
+                result = scrape_and_check_article(url, category)
+                if result.get("status") in ["success", "irrelevant"]:
+                    summary = result.get("summary", "")
+                    if not title:
+                        title = result.get("title", "")
+            except Exception as e:
+                logger.warning(f"Error re-scraping article for recovery: {str(e)}")
+                # Continue with the process even if scraping fails
+        
+        # Remove the link from unused_links.json
+        links.pop(link_index)
+        with open(file_path, "w") as f:
+            json.dump(links, f, indent=4)
+        
+        # Add the link to Google Sheets
+        try:
+            if not reconnect_if_needed():
+                return jsonify({"error": "Could not connect to Google Sheets"}), 500
+                
+            worksheet = sheet.worksheet(category)
+            
+            # Current date in mm/dd/yyyy format
+            date = datetime.today().strftime("%m/%d/%Y")
+            
+            # Create HYPERLINK formula
+            hyperlink_formula = f'=HYPERLINK("{url}", "{title}")'
+            
+            # Add the data row with HYPERLINK formula using USER_ENTERED
+            worksheet.append_row([hyperlink_formula, summary, date], value_input_option="USER_ENTERED")
+            logger.info(f"Recovered link to worksheet '{category}': {url[:50]}...")
+            
+            return jsonify({
+                "status": "success",
+                "message": f"Link recovered and added to {category} worksheet"
+            }), 200
+            
+        except Exception as sheet_error:
+            logger.error(f"Error adding recovered link to sheet: {str(sheet_error)}")
+            # Re-add the link to unused_links.json since we couldn't add it to the sheet
+            links.append(link_data)
+            with open(file_path, "w") as f:
+                json.dump(links, f, indent=4)
+            
+            return jsonify({
+                "status": "error",
+                "error": f"Error adding to sheet: {str(sheet_error)}"
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Error recovering unused link: {str(e)}")
         return jsonify({"status": "error", "error": str(e)}), 500
 
 if __name__ == "__main__":

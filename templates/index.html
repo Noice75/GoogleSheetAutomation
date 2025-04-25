@@ -2972,41 +2972,59 @@
           <button id="viewSheetBtn" class="btn btn-primary">View Sheet</button>
         </div>
         <form id="linkForm">
+          <!-- Category Selection - Always visible -->
           <div class="form-group">
-            <label for="link">Resource URL</label>
-            <input type="url" id="link" class="form-control" placeholder="https://example.com/resource" required autocomplete="off">
-            <div id="linkStatus" class="status hidden"></div>
-          </div>
-          
-          <div class="form-group">
-            <label for="title">Title</label>
-            <input type="text" id="title" class="form-control" placeholder="Enter title" autocomplete="off">
-          </div>
-          
-          <div class="form-group">
-            <label for="summary">Summary</label>
-            <textarea id="summary" class="form-control" placeholder="Enter summary" autocomplete="off"></textarea>
-          </div>
-          
-          <div class="form-group">
-            <label for="date">Publication Date</label>
-            <input type="date" id="date" class="form-control" autocomplete="off">
-          </div>
-          
-          <div class="form-group">
-            <label for="category">Worksheet</label>
+            <label for="category">Category <span class="required">*</span></label>
             <div class="input-group">
-              <select id="category" class="form-control" autocomplete="off">
-                <option value="">Loading worksheets...</option>
+              <select id="category" class="form-control" required autocomplete="off">
+                <option value="">Select a category</option>
               </select>
               <div class="input-group-append">
-                <button type="button" id="refreshWorksheetsBtn" class="btn btn-sm" title="Refresh worksheets">
+                <button type="button" id="refreshWorksheetsBtn" class="btn btn-sm" title="Refresh categories">
                   <span>↻</span>
                 </button>
               </div>
             </div>
+            <small class="text-muted">First select a category to continue</small>
           </div>
-          <button type="submit" id="submitBtn" class="btn btn-primary" disabled>Add Resource</button>
+          
+          <!-- Rest of the form - Initially hidden -->
+          <div id="resourceFormContent" style="display: none;">
+            <div class="form-group">
+              <label for="link">Resource URL <span class="required">*</span></label>
+              <input type="url" id="link" class="form-control" placeholder="https://example.com/resource" required autocomplete="off">
+              <div id="linkStatus" class="status hidden"></div>
+            </div>
+            
+            <!-- Publisher input - Always visible -->
+            <div class="form-group">
+              <label for="publisher">Publisher <span class="required">*</span></label>
+              <input type="text" id="publisher" class="form-control" placeholder="Enter publisher name" required autocomplete="off">
+              <small id="publisherHelp" class="form-text text-muted">Enter the name of the publication or website.</small>
+            </div>
+            
+            <div class="form-group">
+              <label for="title">Title</label>
+              <input type="text" id="title" class="form-control" placeholder="Enter title" autocomplete="off">
+            </div>
+            
+            <div class="form-group">
+              <label for="summary">Summary <small class="text-muted">(for newsletter format)</small></label>
+              <textarea id="summary" class="form-control" placeholder="Brief description of what the article is about" rows="3" autocomplete="off"></textarea>
+              <small id="summaryHelp" class="form-text text-muted">Keep it concise (1-2 sentences). Focus on what readers will learn, not a full summary.</small>
+            </div>
+            
+            <div id="editorNoteContainer" class="alert alert-info" style="display: none;">
+              <small id="editorNote"></small>
+            </div>
+            
+            <div class="form-group">
+              <label for="date">Publication Date</label>
+              <input type="date" id="date" class="form-control" autocomplete="off">
+            </div>
+            
+            <button type="submit" id="submitBtn" class="btn btn-primary">Add Resource</button>
+          </div>
         </form>
         <div id="status" class="hidden"></div>
       </div>
@@ -3364,48 +3382,32 @@
     
     // Function to fetch worksheets
     async function fetchWorksheets() {
-      const categorySelect = document.getElementById("category");
-      const submitBtn = document.getElementById("submitBtn");
-      
       try {
-        showStatus("status", "Loading worksheets...", "loading");
+        const res = await fetch("/get-worksheets");
+        const data = await res.json();
         
-        const response = await fetch("http://localhost:5000/get-worksheets");
-        const data = await response.json();
-        
-        if (data.status === "error") {
-          showStatus("status", data.error, "error");
-          submitBtn.disabled = true;
-          return;
-        }
+        const worksheetSelect = document.getElementById("category");
+        worksheetSelect.innerHTML = '<option value="">Select a category</option>';
         
         if (data.worksheets && data.worksheets.length > 0) {
-          // Clear the loading option
-          categorySelect.innerHTML = "";
-          
-          // Add a placeholder option
-          const placeholderOption = document.createElement("option");
-          placeholderOption.value = "";
-          placeholderOption.textContent = "Select a worksheet";
-          categorySelect.appendChild(placeholderOption);
-          
-          // Populate dropdown with worksheet names
-          data.worksheets.forEach(worksheetName => {
+          data.worksheets.forEach(sheet => {
             const option = document.createElement("option");
-            option.value = worksheetName;
-            option.textContent = worksheetName;
-            categorySelect.appendChild(option);
+            option.value = sheet;
+            option.textContent = sheet;
+            worksheetSelect.appendChild(option);
           });
           
-          submitBtn.disabled = false;
-          document.getElementById("status").className = "hidden";
+          // Hide the rest of the form until category is selected
+          document.getElementById("resourceFormContent").style.display = "none";
+          
+          showStatus("status", "", ""); // Clear any previous status
         } else {
           showStatus("status", "No worksheets found. Please set a valid Sheet ID and create a worksheet.", "error");
-          submitBtn.disabled = true;
+          document.getElementById("resourceFormContent").style.display = "none";
         }
       } catch (error) {
         showStatus("status", `Error loading worksheets: ${error.message}`, "error");
-        submitBtn.disabled = true;
+        document.getElementById("resourceFormContent").style.display = "none";
       }
     }
 
@@ -3414,25 +3416,89 @@
       try {
         showStatus("linkStatus", "Scraping article...", "loading");
         
-        const response = await fetch("http://localhost:5000/scrape-article", {
+        // Get the selected category
+        const category = document.getElementById("category").value;
+        
+        // Make sure category is selected
+        if (!category) {
+          showStatus("linkStatus", "Please select a category first", "error");
+          return;
+        }
+        
+        const response = await fetch("/scrape-article", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ url: url })
+          body: JSON.stringify({ 
+            url: url,
+            category: category
+          })
         });
         
         const data = await response.json();
         
         if (data.status === "success") {
           // Auto-fill both title and summary fields
-          document.getElementById("title").value = data.title;
-          document.getElementById("summary").value = data.summary;
+          document.getElementById("title").value = data.title || "";
+          document.getElementById("summary").value = data.summary || "";
+          
+          // Auto-fill publisher field if identified, but keep input visible
+          if (data.identified_publisher) {
+            document.getElementById("publisher").value = data.identified_publisher;
+            document.getElementById("publisherHelp").textContent = "Publisher automatically identified. You can edit if needed.";
+          } else {
+            document.getElementById("publisher").value = "";
+            document.getElementById("publisherHelp").textContent = "Enter the name of the publication or website.";
+          }
+          
+          // Display editor note if available
+          if (data.editor_note) {
+            document.getElementById("editorNote").textContent = data.editor_note;
+            document.getElementById("editorNoteContainer").style.display = "block";
+            
+            // Update the summary help text to be more helpful
+            document.getElementById("summaryHelp").textContent = 
+              "This is an auto-generated summary focused on the article topic. Edit as needed to make it more concise and informative for newsletter readers.";
+          }
+          
           showStatus("linkStatus", "Article scraped successfully!", "success");
+        } else if (data.status === "irrelevant") {
+          // Handle irrelevant article status
+          document.getElementById("title").value = data.title || "";
+          
+          // Auto-fill publisher field if identified, but keep input visible
+          if (data.identified_publisher) {
+            document.getElementById("publisher").value = data.identified_publisher;
+            document.getElementById("publisherHelp").textContent = "Publisher automatically identified. You can edit if needed.";
+          } else {
+            document.getElementById("publisher").value = "";
+            document.getElementById("publisherHelp").textContent = "Enter the name of the publication or website.";
+          }
+          
+          // Hide editor note for irrelevant articles
+          document.getElementById("editorNoteContainer").style.display = "none";
+          
+          showStatus("linkStatus", `Note: Article may not be relevant. ${data.reason || ""}`, "warning");
+        } else if (data.publisher_required) {
+          // The article needs a publisher
+          document.getElementById("title").value = data.title || "";
+          document.getElementById("publisherHelp").textContent = "Please provide the publisher name for this article.";
+          
+          // Hide editor note
+          document.getElementById("editorNoteContainer").style.display = "none";
+          
+          showStatus("linkStatus", "Please provide the publisher name for this article", "warning");
         } else {
-          showStatus("linkStatus", `Error: ${data.error}`, "error");
+          // Hide editor note for errors
+          document.getElementById("editorNoteContainer").style.display = "none";
+          
+          showStatus("linkStatus", `Error: ${data.error || "Failed to scrape article"}`, "error");
         }
       } catch (error) {
+        // Hide editor note for errors
+        document.getElementById("editorNoteContainer").style.display = "none";
+        
         showStatus("linkStatus", `Error: ${error.message}`, "error");
       }
     }
@@ -3445,13 +3511,33 @@
       }
     });
 
+    // Add event listener for category selection
+    document.getElementById("category").addEventListener("change", function() {
+      const categoryValue = this.value;
+      const resourceFormContent = document.getElementById("resourceFormContent");
+      
+      if (categoryValue) {
+        // Show rest of the form if category is selected
+        resourceFormContent.style.display = "block";
+        
+        // Clear any existing values and statuses
+        document.getElementById("link").value = "";
+        document.getElementById("title").value = "";
+        document.getElementById("summary").value = "";
+        document.getElementById("linkStatus").className = "alert hidden";
+      } else {
+        // Hide the form if no category is selected
+        resourceFormContent.style.display = "none";
+      }
+    });
+
     // Add event listener for date input
     document.getElementById("date").addEventListener("click", function(e) {
       e.preventDefault();
       this.showPicker();
     });
-
-    // Initialize date field
+    
+    // Initialize date field when the document loads
     document.addEventListener('DOMContentLoaded', () => {
       // Set default date to today
       const today = new Date().toISOString().split('T')[0];
@@ -3512,6 +3598,7 @@
       const titleInput = document.getElementById("title");
       const summaryInput = document.getElementById("summary");
       const categorySelect = document.getElementById("category");
+      const publisherInput = document.getElementById("publisher");
       
       if (!linkInput.value) {
         showStatus("status", "Please enter a valid URL", "error");
@@ -3519,7 +3606,13 @@
       }
       
       if (!categorySelect.value) {
-        showStatus("status", "Please select a worksheet", "error");
+        showStatus("status", "Please select a category", "error");
+        return;
+      }
+      
+      if (!publisherInput.value) {
+        showStatus("status", "Please enter the publisher name", "error");
+        publisherInput.focus();
         return;
       }
       
@@ -3531,10 +3624,11 @@
           title: titleInput.value,
           summary: summaryInput.value,
           date: document.getElementById("date").value,
-          category: categorySelect.value
+          category: categorySelect.value,
+          publisher: publisherInput.value
         };
 
-        const res = await fetch("http://localhost:5000/add-link", {
+        const res = await fetch("/add-link", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -3552,6 +3646,16 @@
           document.getElementById("linkForm").reset();
           document.getElementById("date").value = new Date().toISOString().split('T')[0];
           categorySelect.value = currentCategory;
+          
+          // Reset the help text
+          document.getElementById("publisherHelp").textContent = "Enter the name of the publication or website.";
+          document.getElementById("summaryHelp").textContent = "Keep it concise (1-2 sentences). Focus on what readers will learn, not a full summary.";
+          
+          // Hide the editor note
+          document.getElementById("editorNoteContainer").style.display = "none";
+          
+          // Clear any status messages
+          document.getElementById("linkStatus").className = "status hidden";
         } else {
           showStatus("status", `Error: ${result.error}`, "error");
         }
