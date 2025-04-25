@@ -197,16 +197,37 @@ def add_link():
         date = data.get("date", datetime.today().strftime("%m/%d/%Y"))
         title = data.get("title", "")  # Get the title from the request
         publisher = data.get("publisher")  # Get publisher if provided
+        force_add = data.get("force_add", False)  # Flag to override duplicate check
         
         if not tab_name or not link:
-            return jsonify({"error": "Worksheet name and link are required"}), 400
+            return jsonify({"status": "error", "error": "Worksheet name and link are required"}), 400
             
         # Validate URL (basic validation)
         if not link.startswith(('http://', 'https://')):
-            return jsonify({"error": "URL must start with http:// or https://"}), 400
+            return jsonify({"status": "error", "error": "URL must start with http:// or https://"}), 400
+        
+        # Check if URL already exists in crawled_links.json (unless force_add is True)
+        if not force_add:
+            try:
+                with file_lock:
+                    if os.path.exists("crawled_links.json"):
+                        try:
+                            with open("crawled_links.json", "r") as f:
+                                crawled_data = json.load(f)
+                                for item in crawled_data:
+                                    if isinstance(item, dict) and item.get("url") == link:
+                                        # Return as error to work with original UI
+                                        return jsonify({
+                                            "status": "error", 
+                                            "error": f"This article already exists in the Google Sheet (added under {item.get('category', 'unknown')} category)"
+                                        }), 400
+                        except Exception as e:
+                            logger.error(f"Error checking crawled links: {str(e)}")
+            except Exception as e:
+                logger.error(f"Error acquiring file lock: {str(e)}")
         
         if not reconnect_if_needed():
-            return jsonify({"error": "Could not connect to Google Sheets"}), 500
+            return jsonify({"status": "error", "error": "Could not connect to Google Sheets"}), 500
             
         worksheet = sheet.worksheet(tab_name)
         
@@ -218,12 +239,15 @@ def add_link():
         publisher_value = publisher if publisher else ""
         print(publisher_value)
         worksheet.append_row([hyperlink_formula, summary, publisher_value, date], value_input_option="USER_ENTERED")
+        
+        # Successfully added to sheet, now add to crawled_links.json
+        append_link(link, publisher, tab_name)
             
         logger.info(f"Added link to worksheet '{tab_name}': {link[:50]}...")
         return jsonify({"status": "success"}), 200
     except Exception as e:
         logger.error(f"Error adding link: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"status": "error", "error": str(e)}), 500
 
 @app.route('/reset-sheet')
 def reset_sheet():
@@ -362,52 +386,80 @@ def scrape_article():
         url = data.get('url')
         category = data.get('category', None)  # Optional category
         publisher = data.get('publisher', None)  # Optional publisher
+        force_add = data.get('force_add', False)  # Flag to override duplicate check
         
         if not url:
-            return jsonify({"error": "URL is required"}), 400
+            return jsonify({"status": "error", "error": "URL is required"}), 400
         
-        # Use the new article processor module
-        result = scrape_and_check_article(url, category, publisher)
+        # Check if URL already exists in crawled_links.json
+        if not force_add:
+            try:
+                with file_lock:
+                    if os.path.exists("crawled_links.json"):
+                        try:
+                            with open("crawled_links.json", "r") as f:
+                                crawled_data = json.load(f)
+                                for item in crawled_data:
+                                    if isinstance(item, dict) and item.get("url") == url:
+                                        # Return error for duplicate instead of duplicate status to maintain original UI
+                                        return jsonify({
+                                            "status": "error", 
+                                            "error": f"This article already exists in the Google Sheet (added under {item.get('category', 'unknown')} category)"
+                                        }), 400
+                        except Exception as e:
+                            logger.error(f"Error checking crawled links: {str(e)}")
+            except Exception as e:
+                logger.error(f"Error acquiring file lock: {str(e)}")
         
-        if result.get("status") == "error":
-            return jsonify(result), 500
-        elif result.get("status") == "irrelevant":
-            return jsonify({
-                "status": "irrelevant",
-                "title": result.get("title", ""),
-                "reason": result.get("reason", "No matching tags found"),
-                "url": url,
-                "publisher": result.get("publisher"),
-                "identified_publisher": result.get("identified_publisher")
-            }), 200
-        else:
-            # Format the summary specifically for newsletter use
-            summary = result.get("summary", "")
+        # Use the article processor module
+        try:
+            result = scrape_and_check_article(url, category, publisher)
             
-            # Add prompt for editor to improve the summary if needed
-            editor_note = "EDITOR NOTE: This is an auto-generated summary. Consider editing to ensure it captures the main point of the article for newsletter readers."
-            
-            # Add tags or matched terms if available
-            matched_tags = result.get("matched_tags", [])
-            if matched_tags and isinstance(matched_tags, list):
-                tags_info = f"Topics: {', '.join(matched_tags)}"
-                # Only append tags if summary isn't already too long
-                if len(summary) < 120:
-                    summary = f"{summary}\n\n{tags_info}"
-            
-            return jsonify({
-                "status": "success",
-                "title": result.get("title", ""),
-                "summary": summary,
-                "editor_note": editor_note,
-                "matched_tags": matched_tags,
-                "publisher": result.get("publisher"),
-                "identified_publisher": result.get("identified_publisher")
-            }), 200
+            if result.get("status") == "error":
+                return jsonify(result), 500
+            elif result.get("status") == "irrelevant":
+                return jsonify({
+                    "status": "irrelevant",
+                    "title": result.get("title", ""),
+                    "reason": result.get("reason", "No matching tags found"),
+                    "url": url,
+                    "publisher": result.get("publisher"),
+                    "identified_publisher": result.get("identified_publisher")
+                }), 200
+            else:
+                # Format the summary specifically for newsletter use
+                summary = result.get("summary", "")
+                
+                # Add prompt for editor to improve the summary if needed
+                editor_note = "EDITOR NOTE: This is an auto-generated summary. Consider editing to ensure it captures the main point of the article for newsletter readers."
+                
+                # Add tags or matched terms if available
+                matched_tags = result.get("matched_tags", [])
+                if matched_tags and isinstance(matched_tags, list):
+                    tags_info = f"Topics: {', '.join(matched_tags)}"
+                    # Only append tags if summary isn't already too long
+                    if len(summary) < 120:
+                        summary = f"{summary}\n\n{tags_info}"
+                
+                # Add the URL to the crawled_links.json after successful scraping
+                # This will happen when the client confirms the addition to the sheet
+                return jsonify({
+                    "status": "success",
+                    "title": result.get("title", ""),
+                    "summary": summary,
+                    "editor_note": editor_note,
+                    "matched_tags": matched_tags,
+                    "publisher": result.get("publisher"),
+                    "identified_publisher": result.get("identified_publisher")
+                }), 200
+                
+        except Exception as scrape_error:
+            logger.error(f"Error in article scraper: {str(scrape_error)}")
+            return jsonify({"status": "error", "error": f"Failed to scrape article: {str(scrape_error)}"}), 500
                 
     except Exception as e:
-        logger.error(f"Error scraping article: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Error in scrape_article route: {str(e)}")
+        return jsonify({"status": "error", "error": str(e)}), 500
 
 @app.route('/update-sheet-id', methods=['POST'])
 def update_sheet_id():
@@ -1052,6 +1104,7 @@ def scrape_articles_batch():
     try:
         data = request.json
         articles = data.get('articles', [])
+        force_add = data.get('force_add', False)  # Option to force add even if duplicate
         
         if not articles or not isinstance(articles, list):
             return jsonify({"error": "A list of articles is required"}), 400
@@ -1060,11 +1113,23 @@ def scrape_articles_batch():
             "processed": 0,
             "relevant": 0,
             "irrelevant": 0,
+            "duplicates": 0,
             "errors": 0,
             "relevant_articles": [],
             "irrelevant_articles": [],
+            "duplicate_articles": [],
             "error_articles": []
         }
+        
+        # Load existing crawled links for duplicate checking if not forcing add
+        crawled_urls = set()
+        if not force_add and os.path.exists("crawled_links.json"):
+            try:
+                with open("crawled_links.json", "r") as f:
+                    crawled_data = json.load(f)
+                    crawled_urls = {item.get("url") for item in crawled_data if isinstance(item, dict)}
+            except Exception as e:
+                logger.error(f"Error loading crawled links: {str(e)}")
         
         for article in articles:
             url = article.get('url')
@@ -1076,6 +1141,16 @@ def scrape_articles_batch():
                 results["error_articles"].append({
                     "url": url,
                     "error": "URL and category are required for each article"
+                })
+                continue
+            
+            # Check for duplicates
+            if not force_add and url in crawled_urls:
+                results["duplicates"] += 1
+                results["duplicate_articles"].append({
+                    "url": url,
+                    "category": category,
+                    "error": "This article already exists in the Google Sheet"
                 })
                 continue
             
@@ -1093,6 +1168,11 @@ def scrape_articles_batch():
                         "matched_tags": result.get("matched_tags", []),
                         "category": category
                     })
+                    
+                    # Add to crawled_links.json for relevant articles 
+                    # that were successfully processed and added to the sheet
+                    append_link(url, publisher, category)
+                    
                 elif result.get("status") == "irrelevant":
                     results["irrelevant"] += 1
                     results["irrelevant_articles"].append({
@@ -1263,9 +1343,26 @@ def recover_unused_link():
         category = data.get('category')
         summary = data.get('summary')
         title = data.get('title')
+        force_add = data.get('force_add', False)  # Option to force add even if duplicate
         
         if not url or not category:
             return jsonify({"status": "error", "error": "URL and category are required"}), 400
+        
+        # Check if URL already exists in crawled_links.json unless force_add is True
+        if not force_add:
+            try:
+                with file_lock:
+                    with open("crawled_links.json", "r") as f:
+                        crawled_data = json.load(f)
+                        for item in crawled_data:
+                            if isinstance(item, dict) and item.get("url") == url:
+                                # Return as error for original UI compatibility
+                                return jsonify({
+                                    "status": "error",
+                                    "error": f"This article already exists in the Google Sheet (added under {item.get('category', 'unknown')} category)"
+                                }), 400
+            except Exception as e:
+                logger.error(f"Error checking crawled links: {str(e)}")
         
         # Find the link in the unused_links.json file
         file_path = "unused_links.json"
@@ -1328,6 +1425,10 @@ def recover_unused_link():
             # Add the data row with HYPERLINK formula using USER_ENTERED
             worksheet.append_row([hyperlink_formula, summary, date], value_input_option="USER_ENTERED")
             logger.info(f"Recovered link to worksheet '{category}': {url[:50]}...")
+            
+            # Add to crawled_links.json since we've successfully added it to the sheet
+            publisher = link_data.get("publisher") if link_data else None
+            append_link(url, publisher, category)
             
             return jsonify({
                 "status": "success",
