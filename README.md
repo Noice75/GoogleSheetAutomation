@@ -1,4 +1,4 @@
-# GSheet Auto - Article Processor and Organizer
+# GSheet Auto - Article Processor and Organizer.
 
 A web application that processes news articles, checks their relevance based on category tags, and organizes them into Google Sheets. The system includes a crawler for finding relevant articles and a sophisticated article processor for extracting and summarizing content.
 
