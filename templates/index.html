@@ -3861,12 +3861,6 @@
         });
       }
       
-      // Category dropdown change event
-      document.getElementById('crawlerCategory').addEventListener('change', loadCategoryTags);
-      
-      // Add tag button
-      document.getElementById('addTagBtn').addEventListener('click', addNewTag);
-      
       // New tag input enter key event
       document.getElementById('newTag').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
@@ -4494,6 +4488,15 @@
             option.textContent = worksheetName;
             crawlerCategory.appendChild(option);
           });
+          
+          // Attach the change event handler after populating the dropdown
+          crawlerCategory.addEventListener('change', function() {
+            console.log('Category changed!');
+            loadCategoryTags();
+          });
+
+          // Add tag button
+          document.getElementById('addTagBtn').addEventListener('click', addNewTag);
           
           // Update checkboxes
           categoryCheckboxes.innerHTML = '';
