@@ -31,7 +31,11 @@ crawler_status = {
     "progress": 0,
     "total": 0,
     "current": "",
-    "results": []
+    "results": [],
+    "stop_flag": False,
+    "start_time": None,
+    "elapsed_time": 0,
+    "estimated_time_remaining": None
 }
 
 # Global file lock to prevent concurrent writes
@@ -79,23 +83,63 @@ else:
 
 # Helper function to reconnect if token expires
 def reconnect_if_needed():
-    global client, sheet
+    global client, sheet, SHEET_ID
     try:
         # Try to access the sheet to check if credentials are still valid
-        sheet.worksheets()
-        return True
-    except Exception as e:
-        logger.warning(f"Connection error, attempting to reconnect: {str(e)}")
+        if not sheet:
+            logger.warning("Sheet object is None, attempting to initialize connection")
+            if not SHEET_ID:
+                logger.error("No Sheet ID configured")
+                return False
+                
+            try:
+                creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+                client = gspread.authorize(creds)
+                sheet = client.open_by_key(SHEET_ID)
+                logger.info(f"Initialized connection to Google Sheet with ID: {SHEET_ID}")
+                return True
+            except Exception as init_error:
+                logger.error(f"Failed to initialize sheet connection: {str(init_error)}")
+                return False
+                
+        # If sheet object exists, test the connection
         try:
-            # Reconnect
+            sheet.worksheets()
+            return True
+        except gspread.exceptions.APIError as api_error:
+            # Handle specific API errors
+            logger.warning(f"Google Sheets API error: {str(api_error)}")
+            if "invalid_grant" in str(api_error).lower() or "expired" in str(api_error).lower():
+                logger.info("Token expired, attempting to reconnect")
+            elif "not found" in str(api_error).lower():
+                logger.error(f"Sheet with ID {SHEET_ID} not found")
+                return False
+            # Continue to reconnection attempt
+        except Exception as e:
+            logger.warning(f"Connection error, attempting to reconnect: {str(e)}")
+            
+        # Reconnect
+        try:
+            logger.info("Attempting to reconnect to Google Sheets")
             creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
             client = gspread.authorize(creds)
             sheet = client.open_by_key(SHEET_ID)
-            logger.info("Reconnected to Google Sheets successfully")
-            return True
+            
+            # Test the reconnection
+            try:
+                worksheets = sheet.worksheets()
+                worksheet_count = len(worksheets)
+                logger.info(f"Reconnected to Google Sheets successfully, found {worksheet_count} worksheets")
+                return True
+            except Exception as test_error:
+                logger.error(f"Reconnection test failed: {str(test_error)}")
+                return False
         except Exception as reconnect_error:
             logger.error(f"Failed to reconnect: {str(reconnect_error)}")
             return False
+    except Exception as unexpected_error:
+        logger.error(f"Unexpected error in reconnect_if_needed: {str(unexpected_error)}")
+        return False
 
 # Load Sheet ID from config
 def load_config():
@@ -296,8 +340,25 @@ def get_worksheet_data():
             
         if not reconnect_if_needed():
             return jsonify({"error": "Could not connect to Google Sheets"}), 500
-            
-        worksheet = sheet.worksheet(name)
+        
+        # Check if worksheet exists first before trying to access it
+        try:
+            worksheet = sheet.worksheet(name)
+        except Exception as ws_error:
+            # Check if it's a worksheet not found error
+            error_str = str(ws_error).lower()
+            if "not found" in error_str or "does not exist" in error_str:
+                logger.warning(f"Worksheet '{name}' does not exist")
+                return jsonify({
+                    "error": f"Worksheet '{name}' does not exist. You may need to create it first.", 
+                    "worksheet_not_found": True
+                }), 404
+            else:
+                # Some other error
+                logger.error(f"Error accessing worksheet '{name}': {str(ws_error)}")
+                return jsonify({"error": f"Error accessing worksheet: {str(ws_error)}"}), 500
+        
+        # If we get here, the worksheet exists
         values = worksheet.get_all_values()
         
         # Skip the header row if it exists
@@ -307,7 +368,7 @@ def get_worksheet_data():
         return jsonify({"status": "success", "rows": rows}), 200
     except Exception as e:
         logger.error(f"Error getting worksheet data: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Error retrieving worksheet data: {str(e)}"}), 500
 
 @app.route('/create-worksheet', methods=["POST"])
 def create_worksheet():
@@ -718,7 +779,11 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
         "progress": 0,
         "total": 0,
         "current": "",
-        "results": []
+        "results": [],
+        "stop_flag": False,
+        "start_time": start_time,
+        "elapsed_time": 0,
+        "estimated_time_remaining": None
     }
     
     # Load crawler settings
@@ -764,6 +829,22 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
     try:
         # Iterate through categories and publishers
         for category, category_data in filtered_categories.items():
+            # Update elapsed time and estimated time remaining
+            current_time = time.time()
+            crawler_status["elapsed_time"] = int(current_time - start_time)
+            
+            # Calculate estimated time remaining if we have progress
+            if crawler_status["progress"] > 0:
+                time_per_publisher = crawler_status["elapsed_time"] / crawler_status["progress"]
+                remaining_publishers = crawler_status["total"] - crawler_status["progress"]
+                estimated_time = int(time_per_publisher * remaining_publishers)
+                crawler_status["estimated_time_remaining"] = estimated_time
+            
+            # Check stop flag before processing category
+            if crawler_status["stop_flag"]:
+                logger.info("Stopping crawler due to stop request")
+                break
+                
             # Skip if no publishers in this category
             if not category_data.get("publishers"):
                 continue
@@ -773,6 +854,22 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
             
             # Iterate through publishers in this category
             for publisher_name, base_url in category_data.get("publishers", {}).items():
+                # Update elapsed time again
+                current_time = time.time()
+                crawler_status["elapsed_time"] = int(current_time - start_time)
+                
+                # Recalculate estimated time remaining
+                if crawler_status["progress"] > 0:
+                    time_per_publisher = crawler_status["elapsed_time"] / crawler_status["progress"]
+                    remaining_publishers = crawler_status["total"] - crawler_status["progress"]
+                    estimated_time = int(time_per_publisher * remaining_publishers)
+                    crawler_status["estimated_time_remaining"] = estimated_time
+                
+                # Check stop flag before processing publisher
+                if crawler_status["stop_flag"]:
+                    logger.info("Stopping crawler due to stop request")
+                    break
+                    
                 # Skip if specific publishers are requested and this one isn't included
                 if publishers and (category not in publishers_to_crawl or publisher_name not in publishers_to_crawl[category]):
                     continue
@@ -794,8 +891,18 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                         max_pages=max_pages,
                         category=category,
                         publisher=publisher_name,
-                        auto_process=False  # Don't process automatically during search
+                        auto_process=False,  # Don't process automatically during search
+                        stop_flag=lambda: crawler_status["stop_flag"]  # Pass the stop flag as a lambda function
                     )
+                    
+                    # Update elapsed time again
+                    current_time = time.time()
+                    crawler_status["elapsed_time"] = int(current_time - start_time)
+                    
+                    # Check stop flag after search
+                    if crawler_status["stop_flag"]:
+                        logger.info("Stopping crawler after search due to stop request")
+                        break
                     
                     # Get the publisher's domain for validation
                     publisher_domain = base_url.replace("https://", "").replace("http://", "").strip("/")
@@ -805,6 +912,11 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                     # Filter links to ensure they're from the correct domain
                     valid_links = []
                     for link in result_links:
+                        # Check stop flag periodically during processing
+                        if crawler_status["stop_flag"]:
+                            logger.info("Stopping crawler during link filtering due to stop request")
+                            break
+                            
                         try:
                             result_domain = link.replace("https://", "").replace("http://", "").split("/")[0]
                             if result_domain.startswith("www."):
@@ -817,6 +929,15 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                                 logger.info(f"Skipping {link} - not from {publisher_domain}")
                         except Exception as e:
                             logger.error(f"Error validating URL {link}: {str(e)}")
+                    
+                    # Update elapsed time again
+                    current_time = time.time()
+                    crawler_status["elapsed_time"] = int(current_time - start_time)
+                    
+                    # Check stop flag after filtering
+                    if crawler_status["stop_flag"]:
+                        logger.info("Stopping crawler after link filtering due to stop request")
+                        break
                     
                     # Check which links have already been processed previously
                     new_links = []
@@ -846,10 +967,24 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                     
                     # Filter out already processed links
                     for link in valid_links:
+                        # Check stop flag during processing
+                        if crawler_status["stop_flag"]:
+                            logger.info("Stopping crawler during link deduplication due to stop request")
+                            break
+                            
                         if link not in all_processed_links:
                             new_links.append(link)
                         else:
                             logger.info(f"Skipping already processed link: {link}")
+                    
+                    # Update elapsed time again
+                    current_time = time.time()
+                    crawler_status["elapsed_time"] = int(current_time - start_time)
+                    
+                    # Check stop flag after filtering
+                    if crawler_status["stop_flag"]:
+                        logger.info("Stopping crawler after link deduplication due to stop request")
+                        break
                     
                     logger.info(f"Found {len(valid_links)} valid links, {len(new_links)} are new")
                     
@@ -860,7 +995,8 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                         from crawler import process_links
                         
                         # Process the links
-                        process_links(new_links, category, publisher_name, processed_results)
+                        process_links(new_links, category, publisher_name, processed_results, 
+                                     stop_flag=lambda: crawler_status["stop_flag"])  # Pass the stop flag
                         
                         # Log the results from processing
                         relevant_count = sum(1 for r in processed_results if r.get('status') == 'success')
@@ -878,6 +1014,10 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                                     "category": category
                                 })
                     
+                    # Update elapsed time again
+                    current_time = time.time()
+                    crawler_status["elapsed_time"] = int(current_time - start_time)
+                    
                     # Log completion of this publisher
                     logger.info(f"Completed search for {publisher_name} ({category})")
                     
@@ -887,10 +1027,36 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                 finally:
                     # Update progress regardless of success or failure
                     crawler_status["progress"] += 1
+                    
+                    # Update elapsed time and estimated time remaining
+                    current_time = time.time()
+                    crawler_status["elapsed_time"] = int(current_time - start_time)
+                    
+                    # Recalculate estimated time remaining
+                    if crawler_status["progress"] > 0:
+                        time_per_publisher = crawler_status["elapsed_time"] / crawler_status["progress"]
+                        remaining_publishers = crawler_status["total"] - crawler_status["progress"]
+                        estimated_time = int(time_per_publisher * remaining_publishers)
+                        crawler_status["estimated_time_remaining"] = estimated_time
+                    
+                    # Check stop flag before moving to next publisher
+                    if crawler_status["stop_flag"]:
+                        logger.info("Stopping crawler between publishers due to stop request")
+                        break
 
-        # Crawler completed successfully
-        crawler_status["running"] = False
-        crawler_status["current"] = "Crawling completed"
+        # Final time update
+        current_time = time.time()
+        crawler_status["elapsed_time"] = int(current_time - start_time)
+        crawler_status["estimated_time_remaining"] = 0
+        
+        # Crawler completed successfully or was stopped
+        if crawler_status["stop_flag"]:
+            crawler_status["running"] = False
+            crawler_status["current"] = "Crawler stopped by user"
+        else:
+            crawler_status["running"] = False
+            crawler_status["current"] = "Crawling completed"
+            
         total_time = time.time() - start_time
         logger.info(f"Total processing time: {total_time:.2f} seconds")
         
@@ -900,6 +1066,13 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
         crawler_status["current"] = f"Error: {str(e)}"
     
     finally:
+        # Final time update
+        current_time = time.time()
+        crawler_status["elapsed_time"] = int(current_time - start_time)
+        crawler_status["estimated_time_remaining"] = 0
+        
+        # Reset stop flag
+        crawler_status["stop_flag"] = False
         # Close the driver
         driver.quit()
     
@@ -951,6 +1124,12 @@ def delete_publisher(category, publisher):
 @app.route('/crawler/start', methods=['POST'])
 def start_crawler():
     """Start the crawler with specified filters"""
+    global crawler_status
+    
+    # Check if crawler is already running to prevent multiple instances
+    if crawler_status["running"]:
+        return jsonify({"status": "error", "error": "Crawler is already running"}), 400
+    
     data = request.get_json()
     categories = data.get('categories', [])
     publishers = data.get('publishers', [])
@@ -1557,6 +1736,18 @@ def recover_unused_link():
     except Exception as e:
         logger.error(f"Error recovering unused link: {str(e)}")
         return jsonify({"status": "error", "error": str(e)}), 500
+
+@app.route('/crawler/stop', methods=['POST'])
+def stop_crawler():
+    """Stop the running crawler"""
+    global crawler_status
+    
+    if crawler_status["running"]:
+        # Set the stop flag to true
+        crawler_status["stop_flag"] = True
+        return jsonify({"status": "stopping", "message": "Stop signal sent to crawler"}), 200
+    else:
+        return jsonify({"status": "not_running", "message": "Crawler is not running"}), 400
 
 if __name__ == "__main__":
     app.run(debug=True)

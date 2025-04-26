@@ -73,6 +73,35 @@ def upload_to_sheet(result):
         
         # Use published date from metadata if available, otherwise use current date
         date_to_use = publish_date if publish_date else datetime.today().strftime("%m/%d/%Y")
+        
+        # Check if the worksheet exists first
+        try:
+            check_response = requests.get(
+                f"http://localhost:5000/worksheet-data?name={category}",
+                headers={"Content-Type": "application/json"}
+            )
+            
+            # If 404, worksheet doesn't exist, so create it
+            if check_response.status_code == 404:
+                print(f"⚠️ Worksheet '{category}' not found. Creating it...")
+                create_response = requests.post(
+                    "http://localhost:5000/create-worksheet",
+                    json={"title": category},
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if create_response.status_code != 201:
+                    print(f"❌ Failed to create worksheet '{category}': {create_response.text}")
+                    # Fall back to Sheet1 if we couldn't create the worksheet
+                    if category != "Sheet1":
+                        print("⚠️ Falling back to Sheet1")
+                        category = "Sheet1"
+        except Exception as ws_error:
+            print(f"❌ Error checking/creating worksheet: {str(ws_error)}")
+            # Fall back to Sheet1 for safety
+            if category != "Sheet1":
+                print("⚠️ Falling back to Sheet1 due to error")
+                category = "Sheet1"
             
         data = {
             "category": category,  # Category name is used as worksheet name
@@ -188,7 +217,7 @@ def extract_links(driver, all_links):
     except Exception as e:
         print("⚠️ Error extracting links:", e)
 
-def search(driver, query, max_pages=5, category=None, publisher=None, auto_process=True):
+def search(driver, query, max_pages=5, category=None, publisher=None, auto_process=True, stop_flag=None):
     driver.get("https://www.bing.com/")
     try:
         input_box = WebDriverWait(driver, 10).until(
@@ -203,6 +232,11 @@ def search(driver, query, max_pages=5, category=None, publisher=None, auto_proce
         processed_results = []
         
         for page in range(1, max_pages + 1):
+            # Check stop flag if provided
+            if stop_flag and stop_flag():
+                print("🛑 Crawler stop requested. Stopping search.")
+                break
+                
             print(f"🔍 Scraping page {page}...")
 
             scroll_page(driver)
@@ -211,8 +245,13 @@ def search(driver, query, max_pages=5, category=None, publisher=None, auto_proce
             # Process links as they're found if auto_process is enabled
             if auto_process and page % 1 == 0:  # Process every page
                 print(f"🔍 Processing {len(all_links)} links found so far...")
-                newly_processed = process_links(all_links, category, publisher, processed_results)
+                newly_processed = process_links(all_links, category, publisher, processed_results, stop_flag)
                 print(f"✅ Processed {newly_processed} new links on this page")
+                
+                # Check stop flag again after processing
+                if stop_flag and stop_flag():
+                    print("🛑 Crawler stop requested. Stopping search after processing links.")
+                    break
 
             if not click_next_button(driver):
                 print("🛑 No more pages or blocked.")
@@ -224,9 +263,9 @@ def search(driver, query, max_pages=5, category=None, publisher=None, auto_proce
         print(f"\n✅ Total links found: {total_links}")
         
         # Process any remaining links
-        if auto_process:
+        if auto_process and (not stop_flag or not stop_flag()):
             print(f"🔍 Processing any remaining links...")
-            newly_processed = process_links(all_links, category, publisher, processed_results)
+            newly_processed = process_links(all_links, category, publisher, processed_results, stop_flag)
             print(f"✅ Processed {newly_processed} additional links")
             print(f"📊 Final stats: {len(processed_results)}/{total_links} links were relevant and processed")
             
@@ -237,7 +276,7 @@ def search(driver, query, max_pages=5, category=None, publisher=None, auto_proce
         driver.quit()
         return set(), []
 
-def process_links(links, category=None, publisher=None, processed_results=None):
+def process_links(links, category=None, publisher=None, processed_results=None, stop_flag=None):
     """Process a set of links through article processor and upload if relevant"""
     if processed_results is None:
         processed_results = []
@@ -248,93 +287,108 @@ def process_links(links, category=None, publisher=None, processed_results=None):
     skipped_processed = 0
     
     for link in links_list:
-        # Skip if already processed in this run (check URL in processed_results)
-        if any(r.get('url') == link for r in processed_results):
+        # Check stop flag if provided
+        if stop_flag and stop_flag():
+            print("🛑 Crawler stop requested. Stopping link processing.")
+            break
+            
+        # Skip if already processed in this session
+        if any(result.get('url') == link for result in processed_results):
             continue
             
-        # Check if link was already processed in previous runs
-        already_processed, source = check_already_processed(link)
-        if already_processed:
-            print(f"⏭️ Skipping already processed link (found in {source}): {link}")
+        # Check if already processed in previous sessions
+        if check_already_processed(link):
             skipped_processed += 1
             continue
-            
-        print(f"🔍 Processing: {link}")
         
-        # Process article
-        result = scrape_and_check_article(link, category, publisher)
-        
-        # Add URL to the result for tracking
-        if 'url' not in result:
-            result['url'] = link
+        try:
+            print(f"🔍 Processing: {link}")
+            result = scrape_and_check_article(link, category, publisher)
             
-        # Add to processed results
-        processed_results.append(result)
-        newly_processed += 1
-        
-        # If relevant, upload to Google Sheets
-        if result.get('status') == 'success':
-            print(f"✅ Relevant article found: {result.get('title', 'No title')}")
-            
-            # Add category and publisher to result if provided
-            if category:
-                result['category'] = category
-            if publisher and 'publisher' not in result:
-                result['publisher'] = publisher
+            # If we get a result, process based on status
+            if result:
+                # Add URL to result (may be missing from article processor)
+                result['url'] = link
                 
-            # Log metadata if available
-            if 'metadata' in result and result['metadata']:
-                metadata = result['metadata']
-                authors_str = ", ".join(metadata.get("authors", [])) if metadata.get("authors") else "Unknown"
-                publish_date = metadata.get("publish_date", "Unknown")
-                print(f"📝 Article metadata: Authors: {authors_str}, Published: {publish_date}")
-                
-            # Try to verify worksheet exists and create it if needed before uploading
-            try:
-                # First, check if the worksheet exists by making a lightweight API call
-                check_response = requests.get(
-                    f"http://localhost:5000/get-worksheets",
-                    headers={"Content-Type": "application/json"}
-                )
-                
-                if check_response.status_code == 200:
-                    worksheets = check_response.json().get('worksheets', [])
-                    worksheet_name = result.get('category', 'Sheet1')
+                if result.get('status') == 'success':
+                    print(f"✅ Relevant: {result.get('title', 'Unknown Title')}")
                     
-                    # If worksheet doesn't exist, create it
-                    if worksheet_name not in worksheets:
-                        print(f"📝 Creating new worksheet '{worksheet_name}'")
-                        create_response = requests.post(
-                            "http://localhost:5000/create-worksheet",
-                            json={"title": worksheet_name},
-                            headers={"Content-Type": "application/json"}
-                        )
-                        
-                        if create_response.status_code != 201:
-                            print(f"⚠️ Failed to create worksheet: {create_response.text}")
-            except Exception as e:
-                print(f"⚠️ Error checking/creating worksheet: {str(e)}")
-                
-            # Try to upload to Google Sheets
-            upload_success = upload_to_sheet(result)
-            
-            # Only save to crawled_links.json if the upload was successful
-            if upload_success:
-                append_link(link, publisher, category, result.get('metadata'))
-                print(f"💾 Saved to crawled_links.json: {link}")
+                    # Make sure the category worksheet exists
+                    used_category = result.get('category', category)
+                    if used_category:
+                        try:
+                            # Check if the worksheet exists
+                            check_response = requests.get(
+                                f"http://localhost:5000/worksheet-data?name={used_category}",
+                                headers={"Content-Type": "application/json"}
+                            )
+                            
+                            # If 404, worksheet doesn't exist, so create it
+                            if check_response.status_code == 404:
+                                print(f"⚠️ Worksheet '{used_category}' not found. Creating it...")
+                                create_response = requests.post(
+                                    "http://localhost:5000/create-worksheet",
+                                    json={"title": used_category},
+                                    headers={"Content-Type": "application/json"}
+                                )
+                                
+                                if create_response.status_code == 201:
+                                    print(f"✅ Created worksheet '{used_category}'")
+                                else:
+                                    print(f"❌ Failed to create worksheet '{used_category}': {create_response.text}")
+                                    # Fall back to Sheet1 if we couldn't create the worksheet
+                                    result['category'] = "Sheet1"
+                        except Exception as ws_error:
+                            print(f"❌ Error checking/creating worksheet: {str(ws_error)}")
+                            # Fall back to Sheet1 for safety
+                            result['category'] = "Sheet1"
+                    
+                    # Try to upload to Google Sheets if article is relevant
+                    check_upload_success(result)
+                    
+                    # Add to processed results
+                    processed_results.append(result)
+                    newly_processed += 1
+                    
+                elif result.get('status') == 'irrelevant':
+                    print(f"⏩ Irrelevant: {result.get('title', 'Unknown Title')}")
+                    reason = result.get('reason', 'No matching content')
+                    
+                    # Add to unused_links.json with metadata
+                    append_link(
+                        link, 
+                        publisher=publisher, 
+                        category=category,
+                        metadata={
+                            "title": result.get('title', ''),
+                            "reason": reason,
+                            "matched_tags": result.get('matched_tags', [])
+                        }, 
+                        file_path="unused_links.json"
+                    )
+                    
+                    # Still add to processed results to avoid duplicate processing
+                    processed_results.append({
+                        'url': link,
+                        'status': 'irrelevant',
+                        'title': result.get('title', 'Unknown Title'),
+                        'reason': reason
+                    })
+                    newly_processed += 1
+                    
+                elif result.get('status') == 'error':
+                    print(f"❌ Error: {result.get('error', 'Unknown error')}")
             else:
-                print(f"⚠️ Not saving to crawled_links.json due to upload failure: {link}")
-        else:
-            # For irrelevant or error articles, still record them but in unused_links.json
-            if result.get('status') == 'irrelevant':
-                from article_processor import ArticleProcessor
-                processor = ArticleProcessor()
-                processor.save_unused_link(link, category, publisher, result.get('reason', 'No matching tags'))
-                print(f"📝 Saved irrelevant article to unused_links.json: {link}")
+                print(f"❌ Failed to process: {link}")
+        except Exception as e:
+            print(f"❌ Error processing link {link}: {str(e)}")
+        
+        # Check stop flag again after processing each link
+        if stop_flag and stop_flag():
+            print("🛑 Crawler stop requested. Stopping link processing.")
+            break
     
-    if skipped_processed > 0:
-        print(f"⏭️ Skipped {skipped_processed} already processed links")
-    
+    print(f"📊 Processed {newly_processed} new links, skipped {skipped_processed} already processed links")
     return newly_processed
 
 def get_base_url(url):
@@ -353,9 +407,9 @@ def check_already_processed(url):
                     # Check if URL exists in the list
                     for item in data:
                         if isinstance(item, dict) and item.get("url") == url:
-                            return True, "crawled_links.json"
+                            return True
                         elif isinstance(item, str) and item == url:
-                            return True, "crawled_links.json"
+                            return True
                 except json.JSONDecodeError:
                     print("⚠️ Error parsing crawled_links.json")
         
@@ -367,17 +421,17 @@ def check_already_processed(url):
                     # Check if URL exists in the list
                     for item in data:
                         if isinstance(item, dict) and item.get("url") == url:
-                            return True, "unused_links.json"
+                            return True
                         elif isinstance(item, str) and item == url:
-                            return True, "unused_links.json"
+                            return True
                 except json.JSONDecodeError:
                     print("⚠️ Error parsing unused_links.json")
         
         # URL not found in either file
-        return False, None
+        return False
     except Exception as e:
         print(f"⚠️ Error checking if URL is already processed: {str(e)}")
-        return False, None
+        return False
 
 def append_link(link, publisher=None, category=None, metadata=None, file_path="crawled_links.json"):
     """Append a link to the crawled_links.json file with additional metadata"""
@@ -434,19 +488,24 @@ def append_link(link, publisher=None, category=None, metadata=None, file_path="c
 def check_upload_success(result):
     """Check if the article was successfully uploaded to Google Sheets by checking the sheet"""
     try:
-        category = result.get("category", "Sheet1")
+        # Use the category from the result, with a fallback to Sheet1
+        category = result.get("category")
+        if not category:
+            category = "Sheet1"
+            
         url = result.get("url")
         
         if not url:
             return False, "No URL in result"
         
-        # Get worksheet data
+        # Get worksheet data for the specific category/worksheet
         check_response = requests.get(
             f"http://localhost:5000/worksheet-data?name={category}",
             headers={"Content-Type": "application/json"}
         )
         
         if check_response.status_code != 200:
+            print(f"❌ Failed to get worksheet data for {category}: {check_response.text}")
             return False, f"Failed to get worksheet data: {check_response.text}"
             
         data = check_response.json()
@@ -456,11 +515,14 @@ def check_upload_success(result):
         for row in rows:
             # The URL might be in a HYPERLINK formula
             if url in row[0]:
+                print(f"✅ Successfully verified URL in worksheet '{category}'")
                 return True, None
                 
-        return False, "URL not found in worksheet"
+        print(f"⚠️ URL not found in worksheet '{category}'")
+        return False, f"URL not found in worksheet '{category}'"
         
     except Exception as e:
+        print(f"❌ Error checking upload success: {str(e)}")
         return False, f"Error checking upload success: {str(e)}"
 
 if __name__ == "__main__":
