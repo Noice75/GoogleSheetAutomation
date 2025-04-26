@@ -83,63 +83,23 @@ else:
 
 # Helper function to reconnect if token expires
 def reconnect_if_needed():
-    global client, sheet, SHEET_ID
+    global client, sheet
     try:
         # Try to access the sheet to check if credentials are still valid
-        if not sheet:
-            logger.warning("Sheet object is None, attempting to initialize connection")
-            if not SHEET_ID:
-                logger.error("No Sheet ID configured")
-                return False
-                
-            try:
-                creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-                client = gspread.authorize(creds)
-                sheet = client.open_by_key(SHEET_ID)
-                logger.info(f"Initialized connection to Google Sheet with ID: {SHEET_ID}")
-                return True
-            except Exception as init_error:
-                logger.error(f"Failed to initialize sheet connection: {str(init_error)}")
-                return False
-                
-        # If sheet object exists, test the connection
+        sheet.worksheets()
+        return True
+    except Exception as e:
+        logger.warning(f"Connection error, attempting to reconnect: {str(e)}")
         try:
-            sheet.worksheets()
-            return True
-        except gspread.exceptions.APIError as api_error:
-            # Handle specific API errors
-            logger.warning(f"Google Sheets API error: {str(api_error)}")
-            if "invalid_grant" in str(api_error).lower() or "expired" in str(api_error).lower():
-                logger.info("Token expired, attempting to reconnect")
-            elif "not found" in str(api_error).lower():
-                logger.error(f"Sheet with ID {SHEET_ID} not found")
-                return False
-            # Continue to reconnection attempt
-        except Exception as e:
-            logger.warning(f"Connection error, attempting to reconnect: {str(e)}")
-            
-        # Reconnect
-        try:
-            logger.info("Attempting to reconnect to Google Sheets")
+            # Reconnect
             creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
             client = gspread.authorize(creds)
             sheet = client.open_by_key(SHEET_ID)
-            
-            # Test the reconnection
-            try:
-                worksheets = sheet.worksheets()
-                worksheet_count = len(worksheets)
-                logger.info(f"Reconnected to Google Sheets successfully, found {worksheet_count} worksheets")
-                return True
-            except Exception as test_error:
-                logger.error(f"Reconnection test failed: {str(test_error)}")
-                return False
+            logger.info("Reconnected to Google Sheets successfully")
+            return True
         except Exception as reconnect_error:
             logger.error(f"Failed to reconnect: {str(reconnect_error)}")
             return False
-    except Exception as unexpected_error:
-        logger.error(f"Unexpected error in reconnect_if_needed: {str(unexpected_error)}")
-        return False
 
 # Load Sheet ID from config
 def load_config():
@@ -340,25 +300,8 @@ def get_worksheet_data():
             
         if not reconnect_if_needed():
             return jsonify({"error": "Could not connect to Google Sheets"}), 500
-        
-        # Check if worksheet exists first before trying to access it
-        try:
-            worksheet = sheet.worksheet(name)
-        except Exception as ws_error:
-            # Check if it's a worksheet not found error
-            error_str = str(ws_error).lower()
-            if "not found" in error_str or "does not exist" in error_str:
-                logger.warning(f"Worksheet '{name}' does not exist")
-                return jsonify({
-                    "error": f"Worksheet '{name}' does not exist. You may need to create it first.", 
-                    "worksheet_not_found": True
-                }), 404
-            else:
-                # Some other error
-                logger.error(f"Error accessing worksheet '{name}': {str(ws_error)}")
-                return jsonify({"error": f"Error accessing worksheet: {str(ws_error)}"}), 500
-        
-        # If we get here, the worksheet exists
+            
+        worksheet = sheet.worksheet(name)
         values = worksheet.get_all_values()
         
         # Skip the header row if it exists
@@ -368,7 +311,7 @@ def get_worksheet_data():
         return jsonify({"status": "success", "rows": rows}), 200
     except Exception as e:
         logger.error(f"Error getting worksheet data: {str(e)}")
-        return jsonify({"error": f"Error retrieving worksheet data: {str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/create-worksheet', methods=["POST"])
 def create_worksheet():
@@ -995,6 +938,7 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                         from crawler import process_links
                         
                         # Process the links
+                        print(f"CATEGORYYYYYYYYYYYYY {category}")
                         process_links(new_links, category, publisher_name, processed_results, 
                                      stop_flag=lambda: crawler_status["stop_flag"])  # Pass the stop flag
                         

@@ -1424,23 +1424,71 @@
     }
 
     .progress-container {
-      margin-top: 1rem;
-      background-color: rgba(255, 255, 255, 0.6);
-      border-radius: 8px;
+      height: 10px;
+      border-radius: 10px;
+      background-color: #f5f5f5;
+      margin: 15px 0;
       overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+      position: relative;
     }
 
     .progress-bar {
-      height: 0.5rem;
-      background-color: var(--primary);
-      transition: width 0.3s ease;
+      height: 100%;
+      background: linear-gradient(to right, #0f9d58, #10a37f);
+      border-radius: 10px;
+      transition: width 0.5s ease-in-out;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      position: relative;
     }
 
-    .progress-text {
-      margin-top: 0.5rem;
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-      text-align: center;
+    .progress-bar::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background-image: linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.2) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.2) 75%,
+        transparent 75%,
+        transparent
+      );
+      background-size: 50px 50px;
+      animation: move 2s linear infinite;
+      overflow: hidden;
+    }
+
+    @keyframes move {
+      0% {
+        background-position: 0 0;
+      }
+      100% {
+        background-position: 50px 50px;
+      }
+    }
+
+    .time-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .time-stat {
+      display: flex;
+      align-items: center;
+    }
+
+    .time-stat i {
+      margin-right: 5px;
+      color: #10a37f;
     }
 
     /* Table styles for crawled links */
@@ -2932,6 +2980,490 @@
     .crawler-section-title i {
       font-size: 0.9em;
     }
+
+    .status-badge.running {
+      background-color: #10a37f;
+    }
+
+    .status-badge.completed {
+      background-color: #28a745;
+    }
+
+    .status-badge.error {
+      background-color: #dc3545;
+    }
+
+    .status-badge.idle {
+      background-color: #6c757d;
+    }
+
+    .status-badge.stopping {
+      background-color: #fd7e14;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    .button-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .button-group button {
+      transition: all 0.3s ease;
+    }
+
+    .button-group button:disabled {
+      opacity: 0.8;
+    }
+
+    .button-group button:disabled .fa-spinner {
+      animation: spin 1.5s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #crawlerStatus {
+      margin-top: 20px;
+      transition: all 0.3s ease;
+    }
+
+    #crawlerStatus:empty {
+      display: none;
+    }
+
+    #crawlerStatus:not(:empty) {
+      display: block;
+      animation: fadeIn 0.5s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .current-task {
+      background: rgba(16, 163, 127, 0.05);
+      border-left: 3px solid #10a37f;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    .task-icon {
+      background-color: rgba(16, 163, 127, 0.15);
+      color: #10a37f;
+      height: 36px;
+      width: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      flex-shrink: 0;
+    }
+
+    .task-icon i {
+      font-size: 16px;
+    }
+
+    .task-details {
+      flex: 1;
+    }
+
+    .task-name {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    .task-info {
+      color: #666;
+      font-size: 0.85rem;
+    }
+
+    .progress-stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+      flex-wrap: wrap;
+    }
+
+    .progress-stat {
+      text-align: center;
+      padding: 10px 15px;
+      flex: 1;
+      min-width: 100px;
+      position: relative;
+    }
+
+    .progress-stat:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 20%;
+      height: 60%;
+      width: 1px;
+      background-color: rgba(0, 0, 0, 0.08);
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #10a37f;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .progress-details {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .progress-percentage {
+      color: #10a37f;
+      font-weight: 600;
+    }
+
+    .progress-count {
+      color: #666;
+    }
+
+    .time-stats {
+      display: flex;
+      justify-content: space-between;
+      margin: 15px 0;
+      padding: 12px 15px;
+      background-color: rgba(16, 163, 127, 0.05);
+      border-radius: 8px;
+      flex-wrap: wrap;
+    }
+
+    .time-stat {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+      flex: 1;
+      min-width: 120px;
+      padding: 0 10px;
+    }
+
+    .time-stat i {
+      color: #10a37f;
+      margin-right: 8px;
+      font-size: 16px;
+    }
+
+    .time-stat span {
+      font-size: 0.85rem;
+      color: #555;
+      font-weight: 500;
+    }
+
+    .crawler-status-container {
+      background: rgba(30, 30, 40, 0.8);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(60, 60, 80, 0.6);
+      backdrop-filter: blur(5px);
+      transition: all 0.3s ease;
+    }
+
+    .status-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(80, 80, 100, 0.3);
+    }
+
+    .status-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      color: #e0e0e0;
+    }
+
+    .status-title .icon-spin {
+      margin-right: 8px;
+    }
+
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge.running {
+      background: linear-gradient(135deg, #10a37f, #0d8a6c);
+      color: white;
+      animation: pulse 1.5s infinite;
+    }
+
+    .status-badge.stopping {
+      background: linear-gradient(135deg, #e67e22, #d35400);
+      color: white;
+    }
+
+    .status-badge.completed {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      color: white;
+    }
+
+    .status-badge.error {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+    }
+
+    .status-badge.idle {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+    }
+
+    .progress-details {
+      display: flex;
+      justify-content: space-between;
+      margin: 15px 0;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #d0d0d0;
+    }
+
+    .progress-percentage {
+      color: #10a37f;
+      font-weight: 600;
+      text-shadow: 0 0 10px rgba(16, 163, 127, 0.3);
+      font-size: 1rem;
+    }
+
+    .progress-count {
+      color: #bbb;
+    }
+
+    .progress-container {
+      height: 12px;
+      background-color: rgba(80, 80, 100, 0.3);
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 10px 0 20px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(135deg, #10a37f, #0d8a6c);
+      border-radius: 20px;
+      transition: width 0.5s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(16, 163, 127, 0.5);
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, 
+        rgba(255, 255, 255, 0) 0%, 
+        rgba(255, 255, 255, 0.2) 50%, 
+        rgba(255, 255, 255, 0) 100%);
+      animation: shimmer 2s infinite;
+    }
+
+    .time-stats {
+      display: flex;
+      justify-content: space-between;
+      margin: 15px 0;
+      padding: 15px;
+      background-color: rgba(16, 163, 127, 0.1);
+      border-radius: 10px;
+      flex-wrap: wrap;
+      border: 1px solid rgba(16, 163, 127, 0.2);
+    }
+
+    .time-stat {
+      display: flex;
+      align-items: center;
+      margin: 6px 0;
+      flex: 1;
+      min-width: 120px;
+      padding: 0 10px;
+    }
+
+    .time-stat i {
+      color: #10a37f;
+      margin-right: 10px;
+      font-size: 18px;
+      text-shadow: 0 0 10px rgba(16, 163, 127, 0.3);
+    }
+
+    .time-stat span {
+      font-size: 0.9rem;
+      color: #d0d0d0;
+      font-weight: 500;
+    }
+
+    .current-task {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      background-color: rgba(50, 50, 70, 0.5);
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border-left: 3px solid #10a37f;
+    }
+
+    .task-icon {
+      background: rgba(16, 163, 127, 0.2);
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      margin-right: 15px;
+    }
+
+    .task-icon i {
+      color: #10a37f;
+      font-size: 18px;
+    }
+
+    .task-details {
+      flex: 1;
+    }
+
+    .task-name {
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #e0e0e0;
+      font-size: 0.95rem;
+    }
+
+    .task-info {
+      color: #aaa;
+      font-size: 0.85rem;
+    }
+
+    .progress-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      padding: 15px;
+      background-color: rgba(50, 50, 70, 0.5);
+      border-radius: 10px;
+      border: 1px solid rgba(80, 80, 100, 0.3);
+    }
+
+    .progress-stat {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      position: relative;
+    }
+
+    .progress-stat:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 20%;
+      height: 60%;
+      width: 1px;
+      background-color: rgba(80, 80, 100, 0.5);
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #10a37f;
+      margin-bottom: 5px;
+      text-shadow: 0 0 10px rgba(16, 163, 127, 0.2);
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: #bbb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stat-label i {
+      margin-right: 5px;
+      color: #10a37f;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(16, 163, 127, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(16, 163, 127, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(16, 163, 127, 0);
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        transform: translateX(-100%);
+      }
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-in forwards;
+      animation-iteration-count: 1;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Add this CSS to prevent animations during updates */
+    .no-transition {
+      transition: none !important;
+      animation: none !important;
+    }
   </style>
 </head>
 <body>
@@ -3111,9 +3643,12 @@
           </div>
           
           <div class="start-crawler-container">
-            <div>
+            <div class="button-group">
               <button type="button" id="startCrawlerBtn" class="btn btn-success crawler-action-btn">
                 <i class="fas fa-play"></i> Start Crawler
+              </button>
+              <button type="button" id="stopCrawlerBtn" class="btn btn-danger crawler-action-btn" style="display: none; margin-left: 10px;">
+                <i class="fas fa-stop"></i> Stop Crawler
               </button>
             </div>
             <div class="crawler-help-text">
@@ -3307,8 +3842,38 @@
       
       // Initialize polling once with a slower interval - first call happens in the crawler tab initialization
       if (!pollingInterval) {
-        pollCrawlerStatus();
+        // Start with 10-second intervals when idle
+        pollingInterval = setInterval(pollCrawlerStatus, 10000);
+        // Run once immediately to check if crawler is already running
+        pollCrawlerStatus().then(() => {
+          // Immediately check if the crawler is running to update UI appropriately
+          fetch('/crawler/status')
+            .then(response => response.json())
+            .then(data => {
+              if (data.status === 'success' && data.crawler.running) {
+                // If crawler is already running, disable the start button
+                const startButton = document.getElementById('startCrawlerBtn');
+                startButton.disabled = true;
+                startButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Crawler Running';
+              }
+            })
+            .catch(error => console.error('Error checking initial crawler status:', error));
+        });
       }
+      
+      // Category dropdown change event
+      document.getElementById('crawlerCategory').addEventListener('change', loadCategoryTags);
+      
+      // Add tag button
+      document.getElementById('addTagBtn').addEventListener('click', addNewTag);
+      
+      // New tag input enter key event
+      document.getElementById('newTag').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addNewTag();
+        }
+      });
     });
 
     // Tab navigation
@@ -4010,6 +4575,9 @@
       // Start crawler button
       document.getElementById('startCrawlerBtn').addEventListener('click', startCrawler);
       
+      // Stop crawler button
+      document.getElementById('stopCrawlerBtn').addEventListener('click', stopCrawler);
+      
       // Additional check on form submission
       document.getElementById('startCrawlerBtn').addEventListener('click', function() {
         const maxPagesInput = document.getElementById('maxPages');
@@ -4027,27 +4595,77 @@
       // Initial update of publisher checkboxes
       updatePublisherCheckboxes();
       
+      // Restore crawler status from localStorage
+      const savedStatus = localStorage.getItem('crawlerStatus');
+      if (savedStatus) {
+        try {
+          const crawlerStatus = JSON.parse(savedStatus);
+          // Only restore UI if there's real status data (progress > 0 or still running)
+          if (crawlerStatus.progress > 0 || crawlerStatus.running) {
+            // Make sure the crawler status element is visible
+            const statusElement = document.getElementById('crawlerStatus');
+            statusElement.className = '';
+            statusElement.textContent = '';
+            
+            // Create the status container if it doesn't exist
+            let statusContainer = statusElement.querySelector('.crawler-status-container');
+            if (!statusContainer) {
+              statusContainer = document.createElement('div');
+              statusContainer.className = 'crawler-status-container fade-in';
+              statusElement.appendChild(statusContainer);
+            }
+            
+            // Update the UI
+            updateCrawlerStatusUI(crawlerStatus);
+            
+            // Update button states based on running status
+            const startButton = document.getElementById('startCrawlerBtn');
+            const stopButton = document.getElementById('stopCrawlerBtn');
+            
+            if (crawlerStatus.running) {
+              startButton.disabled = true;
+              startButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Crawler Running';
+              stopButton.style.display = 'inline-block';
+            }
+            
+            // Load results if crawler completed or was stopped
+            if (!crawlerStatus.running && 
+                (crawlerStatus.current === "Crawling completed" || 
+                 crawlerStatus.current === "Crawler stopped by user")) {
+              // Make sure the crawler results element is ready
+              const resultsElement = document.getElementById('crawlerResults');
+              if (resultsElement && resultsElement.innerHTML.trim() === '') {
+                resultsElement.innerHTML = '<div class="text-center"><p>Loading crawler results...</p></div>';
+              }
+              // Load the actual results
+              loadCrawlerResults();
+            }
+          }
+        } catch (e) {
+          console.error('Error restoring crawler status:', e);
+        }
+      }
+      
       // Initialize polling once with a slower interval
       if (!pollingInterval) {
         // Start with 10-second intervals when idle
         pollingInterval = setInterval(pollCrawlerStatus, 10000);
-        // Run once immediately
-        pollCrawlerStatus();
+        // Run once immediately to check if crawler is already running
+        pollCrawlerStatus().then(() => {
+          // Immediately check if the crawler is running to update UI appropriately
+          fetch('/crawler/status')
+            .then(response => response.json())
+            .then(data => {
+              if (data.status === 'success' && data.crawler.running) {
+                // If crawler is already running, disable the start button
+                const startButton = document.getElementById('startCrawlerBtn');
+                startButton.disabled = true;
+                startButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Crawler Running';
+              }
+            })
+            .catch(error => console.error('Error checking initial crawler status:', error));
+        });
       }
-      
-      // Category dropdown change event
-      document.getElementById('crawlerCategory').addEventListener('change', loadCategoryTags);
-      
-      // Add tag button
-      document.getElementById('addTagBtn').addEventListener('click', addNewTag);
-      
-      // New tag input enter key event
-      document.getElementById('newTag').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          addNewTag();
-        }
-      });
     });
 
     // Load tags for a category
@@ -4345,7 +4963,7 @@
       }
     }
 
-    // Start the crawler
+    // Restore the original startCrawler function but add elapsed time tracking
     async function startCrawler() {
       const selectedCategories = Array.from(document.querySelectorAll('#categoryCheckboxes input:checked')).map(cb => cb.value);
       
@@ -4382,18 +5000,25 @@
       }
       
       try {
+        // Disable the start button and update its appearance
+        const startButton = document.getElementById('startCrawlerBtn');
+        const stopButton = document.getElementById('stopCrawlerBtn');
+        startButton.disabled = true;
+        startButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Crawler Running';
+        stopButton.style.display = 'inline-block';
+        
         // Initialize the enhanced UI
         const statusElement = document.getElementById('crawlerStatus');
         
-        // Clear any existing status
+        // Clear any existing status and make it visible
         statusElement.className = '';
         statusElement.textContent = '';
         
         // Create or update the status container
-        let statusContainer = document.querySelector('.crawler-status-container');
+        let statusContainer = statusElement.querySelector('.crawler-status-container');
         if (!statusContainer) {
           statusContainer = document.createElement('div');
-          statusContainer.className = 'crawler-status-container fade-in';
+          statusContainer.className = 'crawler-status-container';
           statusElement.appendChild(statusContainer);
         }
         
@@ -4442,19 +5067,26 @@
         progressStats.innerHTML = `
           <div class="progress-stat">
             <div class="stat-value">${selectedPublishers.length}</div>
-            <div class="stat-label">Selected</div>
+            <div class="stat-label"><i class="fas fa-newspaper"></i> Publishers</div>
           </div>
           <div class="progress-stat">
             <div class="stat-value">0</div>
-            <div class="stat-label">Processed</div>
+            <div class="stat-label"><i class="fas fa-tasks"></i> Processed</div>
           </div>
           <div class="progress-stat">
             <div class="stat-value">0</div>
-            <div class="stat-label">Results</div>
+            <div class="stat-label"><i class="fas fa-clipboard-check"></i> Results</div>
           </div>
         `;
         
         statusContainer.appendChild(progressStats);
+        
+        // Store start time for real-time updates
+        const startTime = Date.now();
+        localStorage.setItem('crawlerStartTime', startTime.toString());
+        
+        // Start the real-time elapsed time counter
+        startElapsedTimeCounter(startTime);
         
         // Send the request to start the crawler
         const response = await fetch('/crawler/start', {
@@ -4472,14 +5104,87 @@
         const data = await response.json();
         
         if (data.status !== 'started') {
-          // Show error only if starting failed
+          // Show error if starting failed and re-enable button
           showStatus('crawlerStatus', `Error: ${data.error || 'Failed to start crawler'}`, 'error');
+          startButton.disabled = false;
+          startButton.innerHTML = '<i class="fas fa-play"></i> Start Crawler';
+          stopButton.style.display = 'none';
+          
+          // Stop the elapsed time counter
+          stopElapsedTimeCounter();
         }
         
         // Clear results area
         document.getElementById('crawlerResults').innerHTML = '<div class="text-center"><p>Crawling in progress...</p></div>';
       } catch (error) {
+        // Re-enable the start button in case of error
+        const startButton = document.getElementById('startCrawlerBtn');
+        const stopButton = document.getElementById('stopCrawlerBtn');
+        startButton.disabled = false;
+        startButton.innerHTML = '<i class="fas fa-play"></i> Start Crawler';
+        stopButton.style.display = 'none';
+        
+        // Stop the elapsed time counter
+        stopElapsedTimeCounter();
+        
         showStatus('crawlerStatus', `Error: ${error.message}`, 'error');
+      }
+    }
+    
+    // Stop the crawler
+    async function stopCrawler() {
+      try {
+        // Update stop button appearance
+        const stopButton = document.getElementById('stopCrawlerBtn');
+        const startButton = document.getElementById('startCrawlerBtn');
+        stopButton.disabled = true;
+        stopButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Stopping...';
+        startButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Stopping...';
+        
+        // Send stop request to the server
+        const response = await fetch('/crawler/stop', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'stopping') {
+          // Update status to show stopping
+          const statusElement = document.getElementById('crawlerStatus');
+          const statusContainer = statusElement.querySelector('.crawler-status-container');
+          
+          if (statusContainer) {
+            const statusBadge = statusContainer.querySelector('.status-badge');
+            if (statusBadge) {
+              statusBadge.className = 'status-badge stopping';
+              statusBadge.textContent = 'Stopping...';
+            }
+            
+            // Add a stopping message
+            const stoppingMessage = document.createElement('div');
+            stoppingMessage.className = 'alert alert-warning mt-3';
+            stoppingMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Stopping crawler. This may take a moment while current operations complete...';
+            statusContainer.appendChild(stoppingMessage);
+          }
+        } else {
+          // If crawler wasn't running
+          stopButton.disabled = false;
+          stopButton.innerHTML = '<i class="fas fa-stop"></i> Stop Crawler';
+          startButton.disabled = false;
+          startButton.innerHTML = '<i class="fas fa-play"></i> Start Crawler';
+          showStatus('crawlerStatus', data.message || 'Crawler is not running', 'info');
+        }
+      } catch (error) {
+        const stopButton = document.getElementById('stopCrawlerBtn');
+        const startButton = document.getElementById('startCrawlerBtn');
+        stopButton.disabled = false;
+        stopButton.innerHTML = '<i class="fas fa-stop"></i> Stop Crawler';
+        startButton.disabled = false;
+        startButton.innerHTML = '<i class="fas fa-play"></i> Start Crawler';
+        showStatus('crawlerStatus', `Error stopping crawler: ${error.message}`, 'error');
       }
     }
 
@@ -4495,6 +5200,40 @@
         if (data.status === 'success') {
           const crawler = data.crawler;
           const statusElement = document.getElementById('crawlerStatus');
+          const startButton = document.getElementById('startCrawlerBtn');
+          const stopButton = document.getElementById('stopCrawlerBtn');
+          
+          // Update button state based on crawler status
+          if (crawler.running) {
+            startButton.disabled = true;
+            if (crawler.stop_flag) {
+              startButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Stopping...';
+              stopButton.disabled = true;
+            } else {
+              startButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Crawler Running';
+              stopButton.disabled = false;
+            }
+            stopButton.style.display = 'inline-block';
+            
+            // Start or continue the elapsed time counter
+            if (!elapsedTimeInterval && crawler.start_time) {
+              startElapsedTimeCounter(crawler.start_time);
+            }
+          } else if (crawler.current === "Crawler stopped by user") {
+            startButton.disabled = false;
+            startButton.innerHTML = '<i class="fas fa-play"></i> Start Crawler';
+            stopButton.style.display = 'none';
+            
+            // Stop the elapsed time counter
+            stopElapsedTimeCounter();
+          } else {
+            startButton.disabled = false;
+            startButton.innerHTML = '<i class="fas fa-play"></i> Start Crawler';
+            stopButton.style.display = 'none';
+            
+            // Stop the elapsed time counter
+            stopElapsedTimeCounter();
+          }
           
           // Check if status changed from not running to running
           if (!wasRunning && crawler.running) {
@@ -4513,7 +5252,7 @@
             }
             
             // When crawler completes, load results once
-            if (crawler.current === "Crawling completed") {
+            if (crawler.current === "Crawling completed" || crawler.current === "Crawler stopped by user") {
               loadCrawlerResults();
             }
           }
@@ -4522,131 +5261,215 @@
           wasRunning = crawler.running;
           
           // Create or update the status container
-          let statusContainer = document.querySelector('.crawler-status-container');
-          if (!statusContainer) {
-            statusContainer = document.createElement('div');
-            statusContainer.className = 'crawler-status-container fade-in';
-            statusElement.appendChild(statusContainer);
-          }
-          
-          // Clear previous content and create fresh UI
-          statusContainer.innerHTML = '';
-          
-          // Status header with badge
-          const statusHeader = document.createElement('div');
-          statusHeader.className = 'status-header';
-          
-          const statusTitle = document.createElement('div');
-          statusTitle.className = 'status-title';
-          
-          let statusBadge = document.createElement('div');
-          let statusIcon = '';
-          let badgeClass = '';
-          
-          if (crawler.running) {
-            statusIcon = '<div class="icon-spin"></div>';
-            badgeClass = 'running';
-            statusTitle.innerHTML = `${statusIcon} Crawler Status`;
-            statusBadge.innerHTML = 'Running';
-          } else if (crawler.current === "Crawling completed") {
-            statusIcon = '<i class="fas fa-check-circle"></i>';
-            badgeClass = 'completed';
-            statusTitle.innerHTML = 'Crawler Status';
-            statusBadge.innerHTML = 'Completed';
-          } else if (crawler.current && crawler.current.startsWith("Error:")) {
-            statusIcon = '<i class="fas fa-exclamation-triangle"></i>';
-            badgeClass = 'error';
-            statusTitle.innerHTML = 'Crawler Status';
-            statusBadge.innerHTML = 'Error';
-          } else {
-            statusIcon = '<i class="fas fa-circle"></i>';
-            badgeClass = 'idle';
-            statusTitle.innerHTML = 'Crawler Status';
-            statusBadge.innerHTML = 'Idle';
-          }
-          
-          statusBadge.className = `status-badge ${badgeClass}`;
-          
-          statusHeader.appendChild(statusTitle);
-          statusHeader.appendChild(statusBadge);
-          statusContainer.appendChild(statusHeader);
-          
-          // Add progress details for running crawler
-          if (crawler.running || crawler.current === "Crawling completed") {
-            // Progress container
-            const progressDetails = document.createElement('div');
-            progressDetails.className = 'progress-details';
-            
-            const progressPercent = crawler.total > 0 ? Math.round((crawler.progress / crawler.total) * 100) : 0;
-            progressDetails.innerHTML = `
-              <span>Progress: ${progressPercent}%</span>
-              <span>${crawler.progress} of ${crawler.total} publishers</span>
-            `;
-            statusContainer.appendChild(progressDetails);
-            
-            // Progress bar
-            const progressContainer = document.createElement('div');
-            progressContainer.className = 'progress-container';
-            
-            const progressBar = document.createElement('div');
-            progressBar.className = 'progress-bar';
-            progressBar.style.width = `${progressPercent}%`;
-            
-            progressContainer.appendChild(progressBar);
-            statusContainer.appendChild(progressContainer);
-            
-            // Current task
-            if (crawler.running && crawler.current) {
-              const currentTask = document.createElement('div');
-              currentTask.className = 'current-task fade-in';
-              
-              currentTask.innerHTML = `
-                <div class="task-icon">
-                  <i class="fas fa-search"></i>
-                </div>
-                <div class="task-details">
-                  <div class="task-name">${crawler.current}</div>
-                  <div class="task-info">Finding and processing resources...</div>
-                </div>
-              `;
-              
-              statusContainer.appendChild(currentTask);
-            }
-            
-            // Stats
-            const progressStats = document.createElement('div');
-            progressStats.className = 'progress-stats';
-            
-            const resultsCount = crawler.results ? crawler.results.length : 0;
-            
-            progressStats.innerHTML = `
-              <div class="progress-stat">
-                <div class="stat-value">${crawler.total}</div>
-                <div class="stat-label">Publishers</div>
-              </div>
-              <div class="progress-stat">
-                <div class="stat-value">${crawler.progress}</div>
-                <div class="stat-label">Processed</div>
-              </div>
-              <div class="progress-stat">
-                <div class="stat-value">${resultsCount}</div>
-                <div class="stat-label">Results</div>
-              </div>
-            `;
-            
-            statusContainer.appendChild(progressStats);
-          }
-          
-          // Show error message if there's an error
-          if (crawler.current && crawler.current.startsWith("Error:")) {
-            const errorMessage = document.createElement('div');
-            errorMessage.className = 'alert alert-danger mt-3';
-            errorMessage.textContent = crawler.current;
-            statusContainer.appendChild(errorMessage);
-          }
+          updateCrawlerStatusUI(crawler);
         }
       } catch (error) {
         console.error('Error polling crawler status:', error);
+      }
+    }
+    
+    // Function to update the crawler status UI
+    function updateCrawlerStatusUI(crawler) {
+      // Save crawler status to localStorage for persistence
+      localStorage.setItem('crawlerStatus', JSON.stringify(crawler));
+      
+      const statusElement = document.getElementById('crawlerStatus');
+      
+      // Check if this is the initial creation or an update
+      const isInitialCreation = !statusElement.querySelector('.crawler-status-container');
+      
+      // Make sure the status element is visible and empty
+      statusElement.className = '';
+      
+      // Find existing container or create new one
+      let statusContainer = statusElement.querySelector('.crawler-status-container');
+      if (!statusContainer) {
+        statusContainer = document.createElement('div');
+        statusContainer.className = 'crawler-status-container';
+        statusElement.appendChild(statusContainer);
+      }
+      
+      // Clear previous content and create fresh UI
+      statusContainer.innerHTML = '';
+      
+      // Status header with badge
+      const statusHeader = document.createElement('div');
+      statusHeader.className = 'status-header';
+      
+      const statusTitle = document.createElement('div');
+      statusTitle.className = 'status-title';
+      
+      let statusBadge = document.createElement('div');
+      let statusIcon = '';
+      let badgeClass = '';
+      
+      if (crawler.running) {
+        if (crawler.stop_flag) {
+          statusIcon = '<i class="fas fa-hand-stop-o"></i>';
+          badgeClass = 'stopping';
+          statusTitle.innerHTML = statusIcon + ' Crawler Status';
+          statusBadge.innerHTML = 'Stopping...';
+        } else {
+          statusIcon = '<div class="icon-spin"></div>';
+          badgeClass = 'running';
+          statusTitle.innerHTML = statusIcon + ' Crawler Status';
+          statusBadge.innerHTML = 'Running';
+        }
+      } else if (crawler.current === "Crawler stopped by user") {
+        statusIcon = '<i class="fas fa-stop-circle"></i>';
+        badgeClass = 'idle';
+        statusTitle.innerHTML = 'Crawler Status';
+        statusBadge.innerHTML = 'Stopped';
+      } else if (crawler.current === "Crawling completed") {
+        statusIcon = '<i class="fas fa-check-circle"></i>';
+        badgeClass = 'completed';
+        statusTitle.innerHTML = 'Crawler Status';
+        statusBadge.innerHTML = 'Completed';
+      } else if (crawler.current && crawler.current.startsWith("Error:")) {
+        statusIcon = '<i class="fas fa-exclamation-triangle"></i>';
+        badgeClass = 'error';
+        statusTitle.innerHTML = 'Crawler Status';
+        statusBadge.innerHTML = 'Error';
+      } else {
+        statusIcon = '<i class="fas fa-circle"></i>';
+        badgeClass = 'idle';
+        statusTitle.innerHTML = 'Crawler Status';
+        statusBadge.innerHTML = 'Idle';
+      }
+      
+      statusBadge.className = `status-badge ${badgeClass}`;
+      
+      statusHeader.appendChild(statusTitle);
+      statusHeader.appendChild(statusBadge);
+      statusContainer.appendChild(statusHeader);
+      
+      // Add progress details for running crawler
+      if (crawler.running || crawler.current === "Crawling completed" || crawler.current === "Crawler stopped by user") {
+        // Progress percentage calculation
+        const progressPercent = crawler.total > 0 ? Math.round((crawler.progress / crawler.total) * 100) : 0;
+        
+        // Progress details
+        const progressDetails = document.createElement('div');
+        progressDetails.className = 'progress-details';
+        
+        progressDetails.innerHTML = `
+          <span class="progress-percentage">${progressPercent}% Complete</span>
+          <span class="progress-count">${crawler.progress} of ${crawler.total} publishers</span>
+        `;
+        statusContainer.appendChild(progressDetails);
+        
+        // Progress bar
+        const progressContainer = document.createElement('div');
+        progressContainer.className = 'progress-container';
+        
+        const progressBar = document.createElement('div');
+        progressBar.className = 'progress-bar';
+        progressBar.style.width = `${progressPercent}%`;
+        
+        progressContainer.appendChild(progressBar);
+        statusContainer.appendChild(progressContainer);
+        
+        // Time statistics
+        const timeStats = document.createElement('div');
+        timeStats.className = 'time-stats';
+        
+        // Format elapsed time and estimated time remaining
+        const formatTime = (seconds) => {
+          if (seconds === null || seconds === undefined) return 'Calculating';
+          
+          const hours = Math.floor(seconds / 3600);
+          const minutes = Math.floor((seconds % 3600) / 60);
+          const remainingSeconds = seconds % 60;
+          
+          if (hours > 0) {
+            return `${hours}h ${minutes}m ${remainingSeconds}s`;
+          } else if (minutes > 0) {
+            return `${minutes}m ${remainingSeconds}s`;
+          } else {
+            return `${remainingSeconds}s`;
+          }
+        };
+        
+        // Use our client-side elapsed time instead of server time for running crawler
+        const elapsedTime = crawler.running ? formatTime(clientElapsedTime) : formatTime(crawler.elapsed_time);
+        const estimatedTime = crawler.running ? formatTime(crawler.estimated_time_remaining) : 'Done';
+        
+        timeStats.innerHTML = `
+          <div class="time-stat">
+            <i class="fas fa-clock"></i>
+            <span>Elapsed: ${elapsedTime}</span>
+          </div>
+          <div class="time-stat">
+            <i class="fas fa-hourglass-half"></i>
+            <span>Remaining: ${estimatedTime}</span>
+          </div>
+          <div class="time-stat">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Speed: ${crawler.progress > 0 ? (crawler.elapsed_time / crawler.progress).toFixed(1) : '0.0'}s per publisher</span>
+          </div>
+        `;
+        
+        statusContainer.appendChild(timeStats);
+        
+        // Current task - no animation
+        if (crawler.running && crawler.current) {
+          const currentTask = document.createElement('div');
+          currentTask.className = 'current-task';
+          
+          // Extract publisher name and category from the current task
+          let taskDetails = 'Processing resources...';
+          if (crawler.current.includes('Crawling')) {
+            const match = crawler.current.match(/Crawling (.+) \((.+)\)/);
+            if (match && match.length >= 3) {
+              const publisher = match[1];
+              const category = match[2];
+              taskDetails = `Processing content from ${publisher} in ${category} category`;
+            }
+          }
+          
+          currentTask.innerHTML = `
+            <div class="task-icon">
+              <i class="fas fa-search"></i>
+            </div>
+            <div class="task-details">
+              <div class="task-name">${crawler.current}</div>
+              <div class="task-info">${taskDetails}</div>
+            </div>
+          `;
+          
+          statusContainer.appendChild(currentTask);
+        }
+        
+        // Stats
+        const progressStats = document.createElement('div');
+        progressStats.className = 'progress-stats';
+        
+        const resultsCount = crawler.results ? crawler.results.length : 0;
+        
+        progressStats.innerHTML = `
+          <div class="progress-stat">
+            <div class="stat-value">${crawler.total}</div>
+            <div class="stat-label"><i class="fas fa-newspaper"></i> Publishers</div>
+          </div>
+          <div class="progress-stat">
+            <div class="stat-value">${crawler.progress}</div>
+            <div class="stat-label"><i class="fas fa-tasks"></i> Processed</div>
+          </div>
+          <div class="progress-stat">
+            <div class="stat-value">${resultsCount}</div>
+            <div class="stat-label"><i class="fas fa-clipboard-check"></i> Results</div>
+          </div>
+        `;
+        
+        statusContainer.appendChild(progressStats);
+      }
+      
+      // Show error message if there's an error
+      if (crawler.current && crawler.current.startsWith("Error:")) {
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'alert alert-danger mt-3';
+        errorMessage.textContent = crawler.current;
+        statusContainer.appendChild(errorMessage);
       }
     }
 
@@ -5229,6 +6052,64 @@
     function refreshCollapsibles() {
       // This can be called after adding new elements to the DOM
       initializeCollapsibles();
+    }
+
+    // Now, let's add a real-time elapsed time counter
+    // Add this code after the pollCrawlerStatus function
+    let elapsedTimeInterval;
+    let clientElapsedTime = 0;
+
+    // Function to start the elapsed time counter
+    function startElapsedTimeCounter(startTime) {
+      // Clear any existing interval
+      if (elapsedTimeInterval) {
+        clearInterval(elapsedTimeInterval);
+      }
+      
+      // Initialize our clientElapsedTime
+      clientElapsedTime = 0;
+      
+      // Start a new interval that updates every second
+      elapsedTimeInterval = setInterval(() => {
+        updateElapsedTime(startTime);
+      }, 1000);
+    }
+
+    // Function to stop the elapsed time counter
+    function stopElapsedTimeCounter() {
+      if (elapsedTimeInterval) {
+        clearInterval(elapsedTimeInterval);
+        elapsedTimeInterval = null;
+      }
+    }
+
+    // Function to update just the elapsed time display
+    function updateElapsedTime(startTime) {
+      // Calculate elapsed time based on client-side timer
+      clientElapsedTime = Math.floor((Date.now() - startTime) / 1000);
+      
+      // Format the elapsed time
+      const formatTime = (seconds) => {
+        if (seconds === null || seconds === undefined) return 'Calculating';
+        
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = seconds % 60;
+        
+        if (hours > 0) {
+          return `${hours}h ${minutes}m ${remainingSeconds}s`;
+        } else if (minutes > 0) {
+          return `${minutes}m ${remainingSeconds}s`;
+        } else {
+          return `${remainingSeconds}s`;
+        }
+      };
+      
+      // Update the elapsed time display
+      const elapsedTimeElement = document.querySelector('.time-stat:nth-child(1) span');
+      if (elapsedTimeElement) {
+        elapsedTimeElement.textContent = `Elapsed: ${formatTime(clientElapsedTime)}`;
+      }
     }
   </script>
 </body>
