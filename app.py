@@ -970,7 +970,6 @@ def run_crawler(categories=None, publishers=None, max_pages=5):
                         from crawler import process_links
                         
                         # Process the links
-                        print(f"CATEGORYYYYYYYYYYYYY {category}")
                         process_links(new_links, category, publisher_name, processed_results, 
                                      stop_flag=lambda: crawler_status["stop_flag"])  # Pass the stop flag
                         
