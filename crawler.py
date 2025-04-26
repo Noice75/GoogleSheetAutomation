@@ -3,6 +3,7 @@ import time
 import random
 import json
 import requests
+import logging
 from datetime import datetime
 from urllib.parse import urlparse
 from selenium import webdriver
@@ -14,6 +15,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from article_processor import scrape_and_check_article
 
+# Get logger
+logger = logging.getLogger(__name__)
+
 # This crawler works with the article_processor.py module, which uses newspaper3k
 # for extracting article content, metadata, and creating summaries.
 # It handles collecting links, processing articles, and uploading to Google Sheets.
@@ -22,7 +26,7 @@ from article_processor import scrape_and_check_article
 def load_config():
     """Load the sheet ID from config.json"""
     if not os.path.exists('config.json'):
-        print("⚠️ No config.json found. Unable to upload to Google Sheets.")
+        logger.warning("No config.json found. Unable to upload to Google Sheets.")
         return None
     
     with open('config.json', 'r') as f:
@@ -34,13 +38,13 @@ def upload_to_sheet(result):
     try:
         # Check if we have all required data
         if not all(k in result for k in ['title', 'summary', 'url']):
-            print("⚠️ Missing required data for Google Sheets upload")
+            logger.warning("Missing required data for Google Sheets upload")
             return False
             
         # Ensure we have a valid category - this is crucial for worksheet selection
         category = result.get("category")
         if not category:
-            print("⚠️ No category specified for Google Sheets upload, using Sheet1")
+            logger.warning("No category specified for Google Sheets upload, using Sheet1")
             category = "Sheet1"
             
         publisher = result.get("publisher", "")
@@ -68,7 +72,7 @@ def upload_to_sheet(result):
                     # Format to just the date portion as MM/DD/YYYY
                     publish_date = date_obj.strftime("%m/%d/%Y")
             except Exception as e:
-                print(f"⚠️ Error formatting date {publish_date}: {str(e)}")
+                logger.warning(f"Error formatting date {publish_date}: {str(e)}")
                 publish_date = ""  # Reset if parsing fails
         
         # Use published date from metadata if available, otherwise use current date
@@ -97,30 +101,30 @@ def upload_to_sheet(result):
             try:
                 response_data = response.json()
                 if 'warning' in response_data:
-                    print(f"⚠️ {response_data['warning']}")
+                    logger.warning(f"{response_data['warning']}")
                     # Consider this a success since the API handled it
                     return True
             except:
                 pass
                 
-            print(f"✅ Successfully uploaded to Google Sheets: {result['title']}")
+            logger.info(f"Successfully uploaded to Google Sheets: {result['title']}")
             return True
         else:
             try:
                 error_data = response.json()
                 # Check if this is a duplicate article error
                 if 'error' in error_data and 'already exists' in error_data['error']:
-                    print(f"⚠️ Duplicate article detected: {error_data['error']}")
+                    logger.warning(f"Duplicate article detected: {error_data['error']}")
                     # Return True for duplicates to avoid reprocessing
                     return True
                 else:
-                    print(f"❌ Failed to upload to Google Sheets: {response.text}")
+                    logger.error(f"Failed to upload to Google Sheets: {response.text}")
             except:
-                print(f"❌ Failed to upload to Google Sheets: {response.text}")
+                logger.error(f"Failed to upload to Google Sheets: {response.text}")
             return False
             
     except Exception as e:
-        print(f"❌ Error uploading to Google Sheets: {str(e)}")
+        logger.error(f"Error uploading to Google Sheets: {str(e)}")
         return False
 
 def setup_driver(headless=True):
@@ -129,7 +133,7 @@ def setup_driver(headless=True):
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     
     user_agent = get_desktop_user_agent()
-    print(user_agent)
+    logger.info(user_agent)
     chrome_options.add_argument(f"user-agent={user_agent}")
     
     if headless:
@@ -177,7 +181,7 @@ def scroll_page(driver):
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(random.uniform(2, 4))
     except Exception as e:
-        print("⚠️ Error while scrolling:", e)
+        logger.warning(f"Error while scrolling: {e}")
 
 def click_next_button(driver):
     try:
@@ -190,10 +194,10 @@ def click_next_button(driver):
             next_button.click()
             return True
         else:
-            print("🛑 No 'Next' button found.")
+            logger.info("No 'Next' button found.")
             return False
     except Exception as e:
-        print("⚠️ Error while clicking 'Next' button:", e)
+        logger.warning(f"Error while clicking 'Next' button: {e}")
         return False
 
 def extract_links(driver, all_links):
@@ -206,7 +210,7 @@ def extract_links(driver, all_links):
             if href and "http" in href and "bing.com" not in href:
                 all_links.add(href)
     except Exception as e:
-        print("⚠️ Error extracting links:", e)
+        logger.warning(f"Error extracting links: {e}")
 
 def search(driver, query, max_pages=5, category=None, publisher=None, auto_process=True, stop_flag=None):
     driver.get("https://www.bing.com/")
@@ -225,45 +229,46 @@ def search(driver, query, max_pages=5, category=None, publisher=None, auto_proce
         for page in range(1, max_pages + 1):
             # Check stop flag if provided
             if stop_flag and stop_flag():
-                print("🛑 Crawler stop requested. Stopping search.")
+                logger.info("Crawler stop requested. Stopping search.")
                 break
                 
-            print(f"🔍 Scraping page {page}...")
+            logger.info(f"Scraping page {page}...")
 
             scroll_page(driver)
             extract_links(driver, all_links)
             
             # Process links as they're found if auto_process is enabled
             if auto_process and page % 1 == 0:  # Process every page
-                print(f"🔍 Processing {len(all_links)} links found so far...")
+                logger.info(f"Processing {len(all_links)} links found so far...")
                 newly_processed = process_links(all_links, category, publisher, processed_results, stop_flag)
-                print(f"✅ Processed {newly_processed} new links on this page")
+                logger.info(f"Processed {newly_processed} new links on this page")
                 
                 # Check stop flag again after processing
                 if stop_flag and stop_flag():
-                    print("🛑 Crawler stop requested. Stopping search after processing links.")
+                    logger.info("Crawler stop requested. Stopping search after processing links.")
                     break
 
             if not click_next_button(driver):
-                print("🛑 No more pages or blocked.")
+                logger.info("No more pages or blocked.")
                 break
 
             time.sleep(random.uniform(2, 4))
 
         total_links = len(all_links)
-        print(f"\n✅ Total links found: {total_links}")
+        logger.info(f"\nTotal links found: {total_links}")
         
         # Process any remaining links
         if auto_process and (not stop_flag or not stop_flag()):
-            print(f"🔍 Processing any remaining links...")
+            logger.info(f"Processing any remaining links...")
             newly_processed = process_links(all_links, category, publisher, processed_results, stop_flag)
-            print(f"✅ Processed {newly_processed} additional links")
-            print(f"📊 Final stats: {len(processed_results)}/{total_links} links were relevant and processed")
+            logger.info(f"Processed {newly_processed} additional links")
+            logger.info(f"Final stats: {len(processed_results)}/{total_links} links were relevant and processed")
             
         return all_links, processed_results
 
     except Exception as e:
-        print("❌ Error while performing Bing search:", e)
+        logger.error("Error while performing Bing search:")
+        logger.error(e)
         driver.quit()
         return set(), []
 
@@ -280,7 +285,7 @@ def process_links(links, category=None, publisher=None, processed_results=None, 
     for link in links_list:
         # Check stop flag if provided
         if stop_flag and stop_flag():
-            print("🛑 Crawler stop requested. Stopping link processing.")
+            logger.info("Crawler stop requested. Stopping link processing.")
             break
             
         # Skip if already processed in this run (check URL in processed_results)
@@ -290,11 +295,11 @@ def process_links(links, category=None, publisher=None, processed_results=None, 
         # Check if link was already processed in previous runs
         already_processed, source = check_already_processed(link)
         if already_processed:
-            print(f"⏭️ Skipping already processed link (found in {source}): {link}")
+            logger.info(f"Skipping already processed link (found in {source}): {link}")
             skipped_processed += 1
             continue
             
-        print(f"🔍 Processing: {link}")
+        logger.info(f"Processing: {link}")
         
         # Process article
         result = scrape_and_check_article(link, category, publisher)
@@ -311,7 +316,7 @@ def process_links(links, category=None, publisher=None, processed_results=None, 
             
             # Process based on status
             if result.get('status') == 'success':
-                print(f"✅ Relevant article found: {result.get('title', 'No title')}")
+                logger.info(f"Relevant article found: {result.get('title', 'No title')}")
                 
                 # Add category and publisher to result if provided
                 if category:
@@ -324,7 +329,7 @@ def process_links(links, category=None, publisher=None, processed_results=None, 
                     metadata = result['metadata']
                     authors_str = ", ".join(metadata.get("authors", [])) if metadata.get("authors") else "Unknown"
                     publish_date = metadata.get("publish_date", "Unknown")
-                    print(f"📝 Article metadata: Authors: {authors_str}, Published: {publish_date}")
+                    logger.info(f"Article metadata: Authors: {authors_str}, Published: {publish_date}")
                 
                 # Try to verify worksheet exists and create it if needed before uploading
                 try:
@@ -340,7 +345,7 @@ def process_links(links, category=None, publisher=None, processed_results=None, 
                         
                         # If worksheet doesn't exist, create it
                         if worksheet_name not in worksheets:
-                            print(f"📝 Creating new worksheet '{worksheet_name}'")
+                            logger.info(f"Creating new worksheet '{worksheet_name}'")
                             create_response = requests.post(
                                 "http://localhost:5000/create-worksheet",
                                 json={"title": worksheet_name},
@@ -348,9 +353,9 @@ def process_links(links, category=None, publisher=None, processed_results=None, 
                             )
                             
                             if create_response.status_code != 201:
-                                print(f"⚠️ Failed to create worksheet: {create_response.text}")
+                                logger.warning(f"Failed to create worksheet: {create_response.text}")
                 except Exception as e:
-                    print(f"⚠️ Error checking/creating worksheet: {str(e)}")
+                    logger.warning(f"Error checking/creating worksheet: {str(e)}")
                 
                 # Try to upload to Google Sheets FIRST, before saving to JSON
                 upload_success = upload_to_sheet(result)
@@ -359,12 +364,12 @@ def process_links(links, category=None, publisher=None, processed_results=None, 
                 if upload_success:
                     # Save to crawled_links.json for successful articles
                     append_link(link, publisher, category, result.get('metadata'))
-                    print(f"💾 Saved to crawled_links.json: {link}")
+                    logger.info(f"Saved to crawled_links.json: {link}")
                 else:
-                    print(f"⚠️ Skipping JSON save due to upload failure: {link}")
+                    logger.warning(f"Skipping JSON save due to upload failure: {link}")
                 
             elif result.get('status') == 'irrelevant':
-                print(f"⏩ Irrelevant: {result.get('title', 'Unknown Title')}")
+                logger.info(f"Irrelevant: {result.get('title', 'Unknown Title')}")
                 reason = result.get('reason', 'No matching content')
                 
                 # Save to unused_links.json for irrelevant articles
@@ -379,23 +384,23 @@ def process_links(links, category=None, publisher=None, processed_results=None, 
                     }, 
                     file_path="unused_links.json"
                 )
-                print(f"💾 Saved to unused_links.json: {link}")
+                logger.info(f"Saved to unused_links.json: {link}")
                 
             elif result.get('status') == 'error':
-                print(f"❌ Error: {result.get('error', 'Unknown error')}")
+                logger.error(f"Error: {result.get('error', 'Unknown error')}")
                 # Don't save error articles to any file
         else:
-            print(f"❌ Failed to process: {link}")
+            logger.warning(f"Failed to process: {link}")
         
         # Check stop flag again after processing each link
         if stop_flag and stop_flag():
-            print("🛑 Crawler stop requested. Stopping link processing.")
+            logger.info("Crawler stop requested. Stopping link processing.")
             break
     
     if skipped_processed > 0:
-        print(f"⏭️ Skipped {skipped_processed} already processed links")
+        logger.info(f"Skipped {skipped_processed} already processed links")
     
-    print(f"📊 Processed {newly_processed} new links")
+    logger.info(f"Processed {newly_processed} new links")
     return newly_processed
 
 def get_base_url(url):
@@ -418,7 +423,7 @@ def check_already_processed(url):
                         elif isinstance(item, str) and item == url:
                             return True, "crawled_links.json"
                 except json.JSONDecodeError:
-                    print("⚠️ Error parsing crawled_links.json")
+                    logger.warning("Error parsing crawled_links.json")
         
         # Check unused_links.json
         if os.path.exists("unused_links.json"):
@@ -432,12 +437,12 @@ def check_already_processed(url):
                         elif isinstance(item, str) and item == url:
                             return True, "unused_links.json"
                 except json.JSONDecodeError:
-                    print("⚠️ Error parsing unused_links.json")
+                    logger.warning("Error parsing unused_links.json")
         
         # URL not found in either file
         return False, None
     except Exception as e:
-        print(f"⚠️ Error checking if URL is already processed: {str(e)}")
+        logger.warning(f"Error checking if URL is already processed: {str(e)}")
         return False, None
 
 def append_link(link, publisher=None, category=None, metadata=None, file_path="crawled_links.json"):
@@ -518,17 +523,17 @@ if __name__ == "__main__":
         try:
             max_pages = int(sys.argv[4])
         except ValueError:
-            print(f"⚠️ Invalid max_pages value: {sys.argv[4]}. Using default: {max_pages}")
+            logger.warning(f"Invalid max_pages value: {sys.argv[4]}. Using default: {max_pages}")
     
     # Add site filter to search query
     if site:
         search_query += f" site:{site}"
     
-    print(f"🔍 Starting crawler with:")
-    print(f"   - Query: {search_query}")
-    print(f"   - Category: {category}")
-    print(f"   - Publisher: {publisher}")
-    print(f"   - Max Pages: {max_pages}")
+    logger.info(f"Starting crawler with:")
+    logger.info(f"   - Query: {search_query}")
+    logger.info(f"   - Category: {category}")
+    logger.info(f"   - Publisher: {publisher}")
+    logger.info(f"   - Max Pages: {max_pages}")
     
     try:
         driver = setup_driver(headless=headless)
@@ -545,29 +550,29 @@ if __name__ == "__main__":
         irrelevant_count = sum(1 for r in processed_results if r.get('status') == 'irrelevant')
         error_count = sum(1 for r in processed_results if r.get('status') == 'error')
         
-        print(f"\n📊 Results Summary:")
-        print(f"   - Total links found: {len(result_links)}")
-        print(f"   - Processed links: {len(processed_results)}")
-        print(f"   - Relevant articles: {relevant_count}")
-        print(f"   - Irrelevant articles: {irrelevant_count}")
-        print(f"   - Error articles: {error_count}")
+        logger.info(f"\nResults Summary:")
+        logger.info(f"   - Total links found: {len(result_links)}")
+        logger.info(f"   - Processed links: {len(processed_results)}")
+        logger.info(f"   - Relevant articles: {relevant_count}")
+        logger.info(f"   - Irrelevant articles: {irrelevant_count}")
+        logger.info(f"   - Error articles: {error_count}")
         
         # Show the first few relevant links
         if relevant_count > 0:
-            print("\n✅ First few relevant articles:")
+            logger.info("\nRelevant articles:")
             count = 0
             for result in processed_results:
                 if result.get('status') == 'success':
-                    print(f"   - {result.get('title', 'No title')}: {result.get('url')}")
+                    logger.info(f"   - {result.get('title', 'No title')}: {result.get('url')}")
                     count += 1
                     if count >= 3:  # Show at most 3 examples
                         break
     
     except Exception as e:
-        print(f"❌ Error during crawler execution: {str(e)}")
+        logger.error(f"Error during crawler execution: {str(e)}")
     finally:
         try:
             driver.quit()
-            print("🎬 Crawler finished and browser closed")
+            logger.info("Crawler finished and browser closed")
         except:
-            print("⚠️ Could not close browser properly")
+            logger.warning("Could not close browser properly")

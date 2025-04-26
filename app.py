@@ -14,9 +14,41 @@ from article_processor import scrape_and_check_article
 import requests
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, 
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+def setup_logging():
+    # Create logs directory if it doesn't exist
+    logs_dir = 'logs'
+    if not os.path.exists(logs_dir):
+        os.makedirs(logs_dir)
+    
+    # Configure root logger with both file and console handlers
+    log_file_path = os.path.join(logs_dir, f'app_{datetime.now().strftime("%Y%m%d")}.log')
+    
+    # Set up handlers
+    file_handler = logging.FileHandler(log_file_path)
+    console_handler = logging.StreamHandler()
+    
+    # Set formatter
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+    
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    
+    # Remove existing handlers if any
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+    
+    # Add handlers
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(console_handler)
+    
+    return root_logger
+
+# Initialize logging
+logger = setup_logging()
+logger.info("Logging initialized. Logs are being saved to file and displayed in console.")
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all domains

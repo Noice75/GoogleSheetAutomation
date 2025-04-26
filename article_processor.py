@@ -10,9 +10,7 @@ import string
 from urllib.parse import urlparse
 import re
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, 
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# Get logger
 logger = logging.getLogger(__name__)
 
 class ArticleProcessor:
