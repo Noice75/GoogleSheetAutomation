@@ -10,3 +10,4 @@ networkx
 numpy
 selenium
 webdriver-manager
+lxml_html_clean
