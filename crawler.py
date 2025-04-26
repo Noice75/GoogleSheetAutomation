@@ -185,16 +185,99 @@ def scroll_page(driver):
 
 def click_next_button(driver):
     try:
-        next_button = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, '//a[@aria-label="Next page"]'))
-        )
+        # Try multiple selector patterns to find the next page button
+        selectors = [
+            # Current selector
+            '//a[@aria-label="Next page"]',
+            # New selector from the example HTML
+            '//a[contains(@class, "pgn_nxtpg_btn")]',
+            # Title-based selector
+            '//a[@title="Next page"]',
+            # Text-based selector
+            '//a[contains(., "Next")]',
+            # Content-based selectors
+            '//a[.//div[contains(text(), "Next page")]]',
+            '//a[.//div[contains(@class, "pgn_new_label") and contains(text(), "Next")]]',
+            # ID-based selector (looking for pagination container with Next)
+            '//div[@id="b_pag"]//a[contains(., "Next")]',
+            # First/FORM pattern based selector
+            '//a[contains(@href, "first=") and contains(@href, "FORM=")]'
+        ]
+        
+        # Try each selector until one works
+        next_button = None
+        used_selector = None
+        
+        for selector in selectors:
+            try:
+                # Use a short timeout for each attempt
+                elements = WebDriverWait(driver, 2).until(
+                    EC.presence_of_all_elements_located((By.XPATH, selector))
+                )
+                
+                if elements:
+                    # Filter for visible elements that might be the next button
+                    for element in elements:
+                        if element.is_displayed():
+                            href = element.get_attribute("href")
+                            # Verify it's a next page link by checking URL pattern
+                            if href and "search" in href and (
+                                    "first=" in href or "page=" in href or "FORM=PORE" in href):
+                                next_button = element
+                                used_selector = selector
+                                break
+                    
+                    if next_button:
+                        break
+            except:
+                continue
+        
+        # If none of the selectors worked, try JS approach to find by content
+        if not next_button:
+            logger.info("Trying JavaScript approach to find Next button...")
+            try:
+                # Use JavaScript to find elements with "Next page" text or title
+                script = """
+                    return Array.from(document.querySelectorAll('a')).find(el => 
+                        (el.textContent.includes('Next') || 
+                         el.title.includes('Next') || 
+                         el.innerText.includes('Next') ||
+                         (el.href && el.href.includes('first=')) ||
+                         Array.from(el.querySelectorAll('div')).some(div => 
+                            div.textContent.includes('Next')
+                         )
+                        ) && el.href && el.href.includes('search')
+                    );
+                """
+                next_button = driver.execute_script(script)
+                used_selector = "JavaScript"
+            except Exception as e:
+                logger.warning(f"JavaScript approach failed: {e}")
+        
+        # If button found, click it
         if next_button:
+            logger.info(f"Found 'Next' button using {used_selector}")
             driver.execute_script("arguments[0].scrollIntoView(true);", next_button)
             time.sleep(random.uniform(1.5, 2.5))
-            next_button.click()
+            
+            # Try multiple click methods
+            try:
+                # Try standard click
+                next_button.click()
+            except:
+                try:
+                    # Try JavaScript click
+                    driver.execute_script("arguments[0].click();", next_button)
+                except:
+                    # Try Actions chain
+                    from selenium.webdriver.common.action_chains import ActionChains
+                    ActionChains(driver).move_to_element(next_button).click().perform()
+            
+            # Wait for page to load
+            time.sleep(random.uniform(3, 5))
             return True
         else:
-            logger.info("No 'Next' button found.")
+            logger.info("No 'Next' button found with any selector.")
             return False
     except Exception as e:
         logger.warning(f"Error while clicking 'Next' button: {e}")
