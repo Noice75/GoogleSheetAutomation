@@ -1,0 +1,146 @@
+{
+    "categories": {
+        "NEWS": {
+            "tags": [
+                "ai governance",
+                "AI regulation news",
+                "AI governance updates",
+                "AI policy headlines",
+                "artificial intelligence government news",
+                "AI oversight news",
+                "AI compliance news",
+                "AI laws updates",
+                "responsible AI news",
+                "algorithm regulation news",
+                "tech policy breaking"
+            ],
+            "publishers": {
+                "IAPS": "https://www.iaps.ai",
+                "Technologyreview": "https://www.technologyreview.com",
+                "Wired": "https://www.wired.com",
+                "Politico": "https://www.politico.com",
+                "Theverge": "https://www.theverge.com",
+                "Techcrunch": "https://techcrunch.com",
+                "Aisnakeoil": "https://aisnakeoil.substack.com",
+                "Noemamag": "https://www.noemamag.com",
+                "Vox": "https://www.vox.com",
+                "Jack-Clark": "https://jack-clark.net",
+                "Thegradient": "https://thegradient.pub",
+                "Epochai": "https://epochai.org",
+                "Bigtechnology": "https://bigtechnology.substack.com",
+                "Axios": "https://www.axios.com",
+                "Cnbc": "https://www.cnbc.com",
+                "Aiethicsbrief": "https://aiethicsbrief.com",
+                "Points.Datasociety": "https://points.datasociety.net"
+            }
+        },
+        "POLICY": {
+            "tags": [
+                "ai policy",
+                "AI Act",
+                "executive order artificial intelligence",
+                "AI policy framework",
+                "AI governance legislation",
+                "AI standards ISO OECD",
+                "AI compliance regulation",
+                "AI bill proposal",
+                "AI national strategy",
+                "algorithmic accountability policy",
+                "AI regulatory sandbox"
+            ],
+            "publishers": {}
+        },
+        "ETHICS": {
+            "tags": [
+                "ai ethics",
+                "ai ethic",
+                "ethical AI principles",
+                "AI fairness accountability",
+                "responsible AI practices",
+                "bias in AI systems",
+                "algorithmic justice",
+                "ethical governance of AI",
+                "AI transparency",
+                "AI ethics impact",
+                "values in AI design"
+            ],
+            "publishers": {}
+        },
+        "RESEARCH": {
+            "tags": [
+                "ai research",
+                "AI governance research paper",
+                "AI policy report",
+                "artificial intelligence whitepaper",
+                "AI ethics publication",
+                "LLM alignment study",
+                "responsible AI research",
+                "AI risk framework",
+                "AI regulatory compliance analysis",
+                "AI explainability research",
+                "arXiv AI governance"
+            ],
+            "publishers": {}
+        },
+        "TRAINING": {
+            "tags": [
+                "AI governance course",
+                "AI ethics training",
+                "AI policy workshop",
+                "responsible AI curriculum",
+                "AI compliance certification",
+                "AI regulation bootcamp",
+                "governance of AI class",
+                "AI policy fellowship training",
+                "AI auditing skills",
+                "AI ethics online course"
+            ],
+            "publishers": {}
+        },
+        "EVENTS": {
+            "tags": [
+                "AI governance conference",
+                "AI policy webinar",
+                "responsible AI summit",
+                "AI ethics roundtable",
+                "AI law panel event",
+                "artificial intelligence public consultation",
+                "AI regulatory forum",
+                "AI oversight discussion",
+                "AI fairness event",
+                "algorithm accountability event"
+            ],
+            "publishers": {}
+        },
+        "JOBS": {
+            "tags": [
+                "AI governance job",
+                "AI ethics fellowship",
+                "AI policy internship",
+                "responsible AI hiring",
+                "AI law research assistant",
+                "AI compliance analyst position",
+                "governance AI roles",
+                "AI ethics consultant opening",
+                "artificial intelligence policy fellow",
+                "AI fairness career opportunity"
+            ],
+            "publishers": {}
+        },
+        "GET_INVOLVED": {
+            "tags": [
+                "AI policy consultation",
+                "public comment artificial intelligence",
+                "AI governance volunteer opportunity",
+                "AI ethics open letter",
+                "participatory AI design",
+                "join AI governance initiative",
+                "responsible AI petition",
+                "AI policy hackathon",
+                "AI ethics public engagement",
+                "algorithmic justice campaign"
+            ],
+            "publishers": {}
+        }
+    }
+}

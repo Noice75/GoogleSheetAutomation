@@ -1,0 +1,13 @@
+flask
+flask-cors
+gspread
+oauth2client
+newspaper3k
+requests
+beautifulsoup4
+fake-useragent
+networkx
+numpy
+selenium
+webdriver-manager
+lxml_html_clean
